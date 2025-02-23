@@ -5,7 +5,7 @@
 # Author: Living Huang
 # Date: 2025-02-23
 
-service_file="/etc/init.d/linxdot-chirpstack-mqtt-fowarder"
+service_file="/etc/init.d/linxdot-chirpstack-mqtt-forwarder"
 process_name="chirpstack-mqtt-forwarder"
 
 echo "Step 1: Attempting to stop chirpstack-mqtt-forwarder via init.d service..."
