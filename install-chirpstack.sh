@@ -1,45 +1,55 @@
 #!/bin/sh
 
-# Linxdot opensource: 
-# Main purpose: to install chirpstack service in the LD1001/LD1002 hotspot.
-# By Living Huang 2025-02-23.
+# Linxdot OpenSource:
+# Main purpose: Install ChirpStack service on LD1001/LD1002 hotspot.
+# Author: Living Huang
+# Date: 2025-02-23
 
-#step 1 : check the repo of chirpstack is available and install!
-
+# Variables
 system_dir="/opt/awesome_linxdot/chirpstack-software"
+service_file="/etc/init.d/linxdot-chirpstack-service"
 
-echo "step 1: check the chirpstack to see if it is started"
+echo "Step 1: Checking if ChirpStack service is installed..."
 
-#step 1 : check the service if it is available.
-
-service_file="/etc/init.d/linxdot-chripstack-service"
-
+# Check if service file exists
 if [ ! -f "$service_file" ]; then
+    echo "-------- 2. Service not found. Creating service file."
 
-    # the service file is not exist!
-   echo "-------- 2. the service is not installed. To create it."
-   echo "#!/bin/sh /etc/rc.common
-    START=99
+    cat << 'EOF' > "$service_file"
+#!/bin/sh /etc/rc.common
+START=99
 
-    start() {
-
-        logger -t "try to start chirpstack service...."
-        cd $system_dir/chirpstack-docker
-        docker-compose up -d --remove-orphans
-        logger -t "call chirpstack 'docker-compose up -d'  is ok, please check the docker compose"
+start() {
+    logger -t "chirpstack" "Starting ChirpStack service..."
+    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker || {
+        logger -t "chirpstack" "Failed to change directory."
+        exit 1
     }
 
-    stop(){
-        :
-    } 
-   " > $service_file
+    if docker-compose up -d --remove-orphans; then
+        logger -t "chirpstack" "ChirpStack service started successfully."
+    else
+        logger -t "chirpstack" "Failed to start ChirpStack service."
+    fi
+}
 
-    chmod +x $service_file
-    $service_file enable
+stop() {
+    logger -t "chirpstack" "Stopping ChirpStack service..."
+    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker && docker-compose down
+}
+EOF
 
-    $service_file start
+    chmod +x "$service_file"
+    echo "Service file created and made executable."
 
+    # Enable the service to start at boot
+    "$service_file" enable
+
+    # Start the service immediately
+    "$service_file" start
+else
+    echo "Service already exists. Restarting it..."
+    "$service_file" restart
 fi
 
-echo "step 2: completed installed and running the service!"
-
+echo "Step 2: Installation and service running completed!"
