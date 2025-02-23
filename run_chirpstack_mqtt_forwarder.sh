@@ -4,6 +4,7 @@
 # Purpose: Run the chirpstack-mqtt-forwarder in the background with continuous monitoring.
 # Author: Living Huang
 # Date: 2025-02-23
+# Updated: Added PID check, process termination, and improved logging.
 
 echo "Starting chirpstack-mqtt-forwarder..."
 logger -t "chirpstack-mqtt-forwarder" "Service starting..."
@@ -34,6 +35,31 @@ if [ ! -f "$config_file" ]; then
     exit 1
 fi
 
+# Check if the chirpstack-mqtt-forwarder process is already running
+existing_pid=$(pgrep -f "$executable")
+if [ -n "$existing_pid" ]; then
+    echo "Found existing process (PID: $existing_pid). Stopping it..."
+    logger -t "chirpstack-mqtt-forwarder" "Existing process detected (PID: $existing_pid). Attempting to stop it."
+    kill "$existing_pid"
+
+    # Wait until the process terminates
+    timeout=10
+    while ps -p "$existing_pid" >/dev/null 2>&1 && [ "$timeout" -gt 0 ]; do
+        echo "Waiting for process $existing_pid to stop... ($timeout seconds left)"
+        sleep 1
+        timeout=$((timeout - 1))
+    done
+
+    if ps -p "$existing_pid" >/dev/null 2>&1; then
+        echo "Failed to stop process $existing_pid. Aborting startup."
+        logger -t "chirpstack-mqtt-forwarder" "Error: Could not terminate existing process (PID: $existing_pid)."
+        exit 1
+    fi
+
+    echo "Previous process stopped successfully."
+    logger -t "chirpstack-mqtt-forwarder" "Existing process stopped successfully."
+fi
+
 # Handle termination signals for a graceful shutdown
 trap 'echo "Stopping chirpstack-mqtt-forwarder..."; logger -t "chirpstack-mqtt-forwarder" "Service stopped."; exit 0' INT TERM
 
@@ -46,7 +72,7 @@ while true; do
 
     "$executable" -c "$config_file" | logger -t "chirpstack-mqtt-forwarder"
 
-    echo "Forwarder process exited. Restarting in 5 seconds..."
+    echo "Forwarder process exited unexpectedly. Restarting in 5 seconds..."
     logger -t "chirpstack-mqtt-forwarder" "Process exited unexpectedly. Restarting after 5 seconds."
     sleep 5
 done

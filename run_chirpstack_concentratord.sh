@@ -4,6 +4,7 @@
 # Purpose: Call the lora_pkt_fwd runtime in the background.
 # Author: Living Huang
 # Date: 2025-02-23
+# Updated: Added PID check and process termination before start.
 
 # Default region handling
 region="${1:-as923}"
@@ -42,6 +43,31 @@ for config_file in "$concentratord_config" "$channels_config" "$region_config"; 
         exit 1
     fi
 done
+
+# Check if the concentratord process is already running
+existing_pid=$(pgrep -f "$executable")
+if [ -n "$existing_pid" ]; then
+    echo "Found existing process (PID: $existing_pid). Stopping it..."
+    logger -t "chirpstack-concentratord" "Existing process detected (PID: $existing_pid). Attempting to stop it."
+    kill "$existing_pid"
+
+    # Wait until the process terminates
+    timeout=10
+    while ps -p "$existing_pid" >/dev/null 2>&1 && [ "$timeout" -gt 0 ]; do
+        echo "Waiting for process $existing_pid to stop... ($timeout seconds left)"
+        sleep 1
+        timeout=$((timeout - 1))
+    done
+
+    if ps -p "$existing_pid" >/dev/null 2>&1; then
+        echo "Failed to stop process $existing_pid. Aborting startup."
+        logger -t "chirpstack-concentratord" "Error: Could not terminate existing process (PID: $existing_pid)."
+        exit 1
+    fi
+
+    echo "Previous process stopped successfully."
+    logger -t "chirpstack-concentratord" "Existing process stopped successfully."
+fi
 
 # Handle graceful shutdown
 trap 'echo "Stopping ChirpStack Concentratord..."; logger -t "chirpstack-concentratord" "Service stopped."; exit 0' INT TERM
