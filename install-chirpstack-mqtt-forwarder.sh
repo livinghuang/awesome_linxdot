@@ -43,8 +43,7 @@ EOF
     # Start the service
     "$service_file" start
 else
-    echo "Service already exists. Restarting..."
-    "$service_file" restart
+    echo "Service already exists."
 fi
 
 echo "Step 2: Service setup completed!"
