@@ -2,8 +2,8 @@
 
 # Linxdot OpenSource:
 # Purpose: Stop and remove the lora_pkt_fwd service and turn off LEDs.
-# Author: Living Huang
-# Date: 2025-02-23
+
+set -e  # Exit immediately if any command fails
 
 service_file="/etc/init.d/linxdot-lora-pkt-fwd"
 process_name="lora_pkt_fwd"
@@ -15,9 +15,8 @@ led2="/sys/devices/platform/leds/leds/work-led2/brightness"
 echo "Step 1: Attempting to stop lora_pkt_fwd via init.d service..."
 logger -t "$process_name" "Attempting to stop service."
 
-# Step 1: Stop the service if it exists
 if [ -f "$service_file" ]; then
-    "$service_file" stop
+    "$service_file" stop || true
     echo "Service stop command issued."
     logger -t "$process_name" "Service stop command issued."
     sleep 2
@@ -27,24 +26,31 @@ else
 fi
 
 echo "Step 2: Checking for running processes..."
-pid=$(pgrep -f "$process_name")
+# Find all PIDs related to the process name, excluding grep and the script itself
+pids=$(ps | grep "$process_name" | grep -v grep | grep -v "$0" | awk '{print $1}')
 
-if [ -n "$pid" ]; then
-    echo "Found running process with PID(s): $pid. Attempting to terminate..."
-    logger -t "$process_name" "Found PID(s): $pid. Sending termination signal."
+if [ -n "$pids" ]; then
+    echo "Found running process PID(s): $pids. Attempting to terminate..."
+    logger -t "$process_name" "Terminating PID(s): $pids."
 
     # Attempt graceful kill
-    kill "$pid"
+    for pid in $pids; do
+        kill "$pid" && echo "Terminated PID $pid" || echo "Failed to terminate PID $pid"
+    done
+
     sleep 2
 
-    # Force kill if still running
-    if pgrep -f "$process_name" > /dev/null; then
-        echo "Process did not stop. Forcing termination with kill -9..."
-        logger -t "$process_name" "Process did not stop. Forcing kill -9."
-        kill -9 "$pid"
+    # Force kill if any processes are still running
+    remaining_pids=$(ps | grep "$process_name" | grep -v grep | grep -v "$0" | awk '{print $1}')
+    if [ -n "$remaining_pids" ]; then
+        echo "Force killing remaining PID(s): $remaining_pids..."
+        logger -t "$process_name" "Force killing PID(s): $remaining_pids."
+        for pid in $remaining_pids; do
+            kill -9 "$pid" && echo "Force killed PID $pid" || echo "Failed to force kill PID $pid"
+        done
     else
-        echo "Process terminated successfully."
-        logger -t "$process_name" "Process terminated successfully."
+        echo "All processes terminated successfully."
+        logger -t "$process_name" "All processes terminated successfully."
     fi
 else
     echo "No running process found for $process_name."
@@ -54,12 +60,20 @@ fi
 echo "Step 3: Turning off LEDs..."
 if [ -w "$led1" ]; then
     echo 0 > "$led1"
+    echo "LED1 turned off."
     logger -t "$process_name" "LED1 turned off."
+else
+    echo "LED1 path not found or not writable."
+    logger -t "$process_name" "LED1 path not found or not writable."
 fi
 
 if [ -w "$led2" ]; then
     echo 0 > "$led2"
+    echo "LED2 turned off."
     logger -t "$process_name" "LED2 turned off."
+else
+    echo "LED2 path not found or not writable."
+    logger -t "$process_name" "LED2 path not found or not writable."
 fi
 
 echo "Step 4: Disabling service from autostart..."

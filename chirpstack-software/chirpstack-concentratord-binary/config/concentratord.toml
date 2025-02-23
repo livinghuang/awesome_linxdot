@@ -10,7 +10,7 @@
 #   * WARN
 #   * ERROR
 #   * OFF
-log_level="INFO"
+log_level="DEBUG"
 
 # Log to syslog.
 #
