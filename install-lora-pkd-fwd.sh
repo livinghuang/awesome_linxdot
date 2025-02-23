@@ -23,7 +23,7 @@ if [ ! -f "$service_file" ]; then
 
         logger -t "starting lora_pkt_fwd service!...."
         procd_open_instance
-        procd_set_param command "/etc/awesome_linxdot/run_lora_pkt_fwd.sh" \$thisRegion
+        procd_set_param command "/opt/awesome_linxdot/run_lora_pkt_fwd.sh" \$thisRegion
         procd_set_param respawn
         procd_close_instance
 

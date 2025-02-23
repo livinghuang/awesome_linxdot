@@ -23,7 +23,7 @@ if [ ! -f "$service_file" ]; then
 
         logger -t "starting chirpstack-gateway-mesh service!...."
         procd_open_instance
-        procd_set_param command "/etc/awesome_linxdot/run_chirpstack-gateway-mesh.sh" \$thisRegion
+        procd_set_param command "/opt/awesome_linxdot/run_chirpstack-gateway-mesh.sh" \$thisRegion
         procd_set_param respawn
         procd_close_instance
 
