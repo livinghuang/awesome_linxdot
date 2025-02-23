@@ -15,7 +15,7 @@ else
       region=$1
 fi
 
-cd /etc/linxdot-opensource/chirpstack-software/chirpstack-gateway-mesh-binary
+cd /etc/awesome_linxdot/chirpstack-software/chirpstack-gateway-mesh-binary
 #./chirpstack-gateway-mesh -c ./config/chirpstack-gateway-mesh.toml -c ./config/region_$region.toml > /var/log/gateway_mesh.log 2>&1 &
 
  while [ true ]; do

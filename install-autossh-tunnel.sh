@@ -19,7 +19,7 @@ if [ ! -f "$service_file" ]; then
 
         logger -t "starting chirpstack-mqtt-fowarder service!...."
         procd_open_instance
-        AUTOSSH_POLL=60 procd_set_param command "/etc/linxdot-opensource/run_autossh_autossh_tunnel.sh" 
+        AUTOSSH_POLL=60 procd_set_param command "/etc/awesome_linxdot/run_autossh_autossh_tunnel.sh" 
         procd_set_param respawn
         procd_close_instance
 

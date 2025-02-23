@@ -5,7 +5,7 @@
 # By Louis Chuang 2024-04-04.
 
 echo "chirpstack-mqtt-forwarder start!!"
-cd /etc/linxdot-opensource/chirpstack-software/chirpstack-mqtt-forwarder-binary
+cd /etc/awesome_linxdot/chirpstack-software/chirpstack-mqtt-forwarder-binary
 
  while [ true ]; do
 

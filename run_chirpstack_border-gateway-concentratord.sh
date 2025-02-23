@@ -15,11 +15,11 @@ else
       region=$1
 fi
 
-cd /etc/linxdot-opensource/chirpstack-border-gateway/chirpstack-concentratord-binary
+cd /etc/awesome_linxdot/chirpstack-border-gateway/chirpstack-concentratord-binary
 
  while [ true ]; do
 
-     ./chirpstack-concentratord-sx1302 -c /etc/linxdot-opensource/chirpstack-border-gateway/chirpstack-concentratord-binary/config/concentratord.toml -c /etc/linxdot-opensource/chirpstack-border-gateway/chirpstack-concentratord-binary/config/channels_$region.toml -c /etc/linxdot-opensource/chirpstack-border-gateway/chirpstack-concentratord-binary/config/region_$region.toml | logger -t chirpstack-border-concentratord
+     ./chirpstack-concentratord-sx1302 -c /etc/awesome_linxdot/chirpstack-border-gateway/chirpstack-concentratord-binary/config/concentratord.toml -c /etc/awesome_linxdot/chirpstack-border-gateway/chirpstack-concentratord-binary/config/channels_$region.toml -c /etc/awesome_linxdot/chirpstack-border-gateway/chirpstack-concentratord-binary/config/region_$region.toml | logger -t chirpstack-border-concentratord
 
  done
 
