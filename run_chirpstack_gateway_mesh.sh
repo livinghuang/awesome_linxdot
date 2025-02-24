@@ -1,14 +1,15 @@
 #!/bin/sh
 
 # Linxdot OpenSource:
-# Purpose: Call the chirpstack-gateway-mesh runtime in the background.
+# Purpose: Run the chirpstack-gateway-mesh in the background with continuous monitoring.
 # Author: Living Huang
 # Date: 2025-02-23
+# Updated: Added PID check, process termination, improved logging, and robust error handling.
 
 # Default region or user-provided parameter
 region="${1:-as923}"
 echo "Using region: $region"
-logger -t "chirpstack-gateway-mesh" "Starting with region: $region"
+logger -t "chirpstack-gateway-mesh" "Service starting with region: $region"
 
 # Directories and executables
 base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-gateway-mesh-binary"
@@ -16,6 +17,8 @@ executable="$base_dir/chirpstack-gateway-mesh"
 config_dir="$base_dir/config"
 main_config="$config_dir/chirpstack-gateway-mesh.toml"
 region_config="$config_dir/region_$region.toml"
+
+# --- Pre-run Checks ---
 
 # Check if working directory exists
 if [ ! -d "$base_dir" ]; then
@@ -40,15 +43,46 @@ for config_file in "$main_config" "$region_config"; do
     fi
 done
 
-# Trap for graceful shutdown
+# --- Process Management ---
+
+# Check if the process is already running
+existing_pid=$(pgrep -f "$executable")
+if [ -n "$existing_pid" ]; then
+    echo "Found existing process (PID: $existing_pid). Attempting to stop it..."
+    logger -t "chirpstack-gateway-mesh" "Existing process detected (PID: $existing_pid). Attempting to stop it."
+
+    kill "$existing_pid"
+
+    # Wait until the process terminates (up to 10 seconds)
+    timeout=10
+    while ps -p "$existing_pid" >/dev/null 2>&1 && [ "$timeout" -gt 0 ]; do
+        echo "Waiting for process $existing_pid to stop... ($timeout seconds left)"
+        sleep 1
+        timeout=$((timeout - 1))
+    done
+
+    # Check if termination was successful
+    if ps -p "$existing_pid" >/dev/null 2>&1; then
+        echo "Failed to stop process $existing_pid. Aborting startup."
+        logger -t "chirpstack-gateway-mesh" "Error: Could not terminate existing process (PID: $existing_pid)."
+        exit 1
+    fi
+
+    echo "Previous process stopped successfully."
+    logger -t "chirpstack-gateway-mesh" "Existing process stopped successfully."
+fi
+
+# --- Signal Handling ---
+
+# Handle termination signals for graceful shutdown
 trap 'echo "Stopping chirpstack-gateway-mesh..."; logger -t "chirpstack-gateway-mesh" "Service stopped."; exit 0' INT TERM
 
-# Change to the base directory
+# --- Main Loop ---
+
 cd "$base_dir" || exit 1
 
-# Main loop
 while true; do
-    echo "Launching chirpstack-gateway-mesh..."
+    echo "Launching chirpstack-gateway-mesh with region: $region..."
     logger -t "chirpstack-gateway-mesh" "Launching process with region: $region"
 
     "$executable" -c "$main_config" -c "$region_config" | logger -t "chirpstack-gateway-mesh"

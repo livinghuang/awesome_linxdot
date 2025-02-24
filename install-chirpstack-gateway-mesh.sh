@@ -7,7 +7,7 @@
 
 region="as923"
 service_file="/etc/init.d/chirpstack-gateway-mesh"
-run_script="/opt/awesome_linxdot/run_chirpstack-gateway-mesh.sh"
+run_script="/opt/awesome_linxdot/run_chirpstack_gateway_mesh.sh"
 
 echo "Step 1: Checking if the ChirpStack Gateway Mesh service is installed..."
 
