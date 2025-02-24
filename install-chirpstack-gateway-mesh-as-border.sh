@@ -7,7 +7,7 @@
 # Updated: Added check for existing chirpstack-gateway-mesh services to prevent conflicts.
 
 region="as923"
-service_file="/etc/init.d/chirpstack-gateway-mesh-as-border"
+service_file="/etc/init.d/linxdot-chirpstack-gateway-mesh-as-border"
 run_script="/opt/awesome_linxdot/run_chirpstack_gateway_mesh_as_border.sh"
 log_tag="chirpstack-gateway-mesh-as-border"
 

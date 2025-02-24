@@ -6,7 +6,7 @@
 # Date: 2025-02-23
 
 region="as923"
-service_file="/etc/init.d/chirpstack-gateway-mesh"
+service_file="/etc/init.d/linxdot-chirpstack-gateway-mesh"
 run_script="/opt/awesome_linxdot/run_chirpstack_gateway_mesh.sh"
 
 echo "Step 1: Checking if the ChirpStack Gateway Mesh service is installed..."

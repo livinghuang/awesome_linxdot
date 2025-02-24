@@ -7,7 +7,7 @@
 # Updated: Improved error handling, logging, and added service existence checks.
 
 region="as923"
-service_file="/etc/init.d/chirpstack-gateway-mesh"
+service_file="/etc/init.d/linxdot-chirpstack-gateway-mesh-as-relay"
 run_script="/opt/awesome_linxdot/run_chirpstack_gateway_mesh_as_relay.sh"
 log_tag="chirpstack-gateway-mesh"
 
