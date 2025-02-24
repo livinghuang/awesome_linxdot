@@ -9,7 +9,7 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 
 service_file="/etc/init.d/linxdot-chirpstack-gateway-mesh-as-border"
-process_name="chirpstack-gateway-mesh"
+process_name="chirpstack-gateway-mesh-as-border"
 
 echo "Step 1: Attempting to stop via init.d service..."
 logger -t "$process_name" "Attempting to stop service."
