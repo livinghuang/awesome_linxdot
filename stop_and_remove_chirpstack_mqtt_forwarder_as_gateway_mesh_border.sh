@@ -4,7 +4,6 @@
 # Purpose: Stop and remove the chirpstack-mqtt-forwarder service.
 
 set -e  # Exit immediately if a command exits with a non-zero status
-
 service_file="/etc/init.d/linxdot-chirpstack-mqtt-forwarder-as-gateway-mesh-border"
 process_name="chirpstack-mqtt-forwarder"
 

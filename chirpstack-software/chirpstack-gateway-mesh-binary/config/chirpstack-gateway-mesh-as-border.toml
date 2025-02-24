@@ -43,7 +43,7 @@
     #
     # This defines the interval in which a Relay Gateway (border_gateway=false)
     # will emit heartbeat messages.
-    heartbeat_interval="1m"
+    # heartbeat_interval="1m"
   
   # Ignore direct uplinks (Border Gateway).
     #
@@ -123,10 +123,10 @@
     [backend.concentratord]
   
       # Event API URL.
-      event_url="ipc:///tmp/concentratord_event"
+       event_url="ipc:///tmp/concentratord_event"
   
       # Command API URL.
-      command_url="ipc:///tmp/concentratord_command"
+       command_url="ipc:///tmp/concentratord_command"
   
   # ChirpStack Concentratord configuration (mesh communication).
     #
@@ -138,6 +138,5 @@
   
       # Event API URL.
       event_url="ipc:///tmp/concentratord_event"
-  
       # Command API URL.
       command_url="ipc:///tmp/concentratord_command"
