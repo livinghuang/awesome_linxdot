@@ -108,13 +108,13 @@
     #
     # This configuration is only used when the border_gateway option is set
     # to true.
-    # [mesh.proxy_api]
+    [mesh.proxy_api]
   
       # Event PUB socket bind.
-      # event_bind="ipc:///tmp/gateway_relay_event"
+       event_bind="ipc:///tmp/gateway_relay_event"
   
       # Command REP socket bind.
-      # command_bind="ipc:///tmp/gateway_relay_command"
+       command_bind="ipc:///tmp/gateway_relay_command"
   
   # Backend configuration.
     [backend]

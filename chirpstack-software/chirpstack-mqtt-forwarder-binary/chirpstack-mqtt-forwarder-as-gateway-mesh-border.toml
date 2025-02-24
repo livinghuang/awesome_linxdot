@@ -130,9 +130,9 @@
 # ChirpStack Concentratord backend configuration.
   [backend.concentratord]
     # Event API URL.
-     event_url="ipc:///tmp/concentratord_event"
+    # event_url="ipc:///tmp/concentratord_event"
     # Command API URL.
-     command_url="ipc:///tmp/concentratord_command"
+    # command_url="ipc:///tmp/concentratord_command"
     # Event PUB socket bind.
       event_bind="ipc:///tmp/gateway_relay_event"
     # Command REP socket bind.
