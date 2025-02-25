@@ -9,7 +9,7 @@
 # Default region or user-provided parameter
 region="${1:-as923}"
 echo "Using region: $region"
-logger -t "chirpstack-gateway-mesh" "Service starting with region: $region"
+logger -t "chirpstack-gateway-mesh-as-border" "Service starting with region: $region"
 
 # Directories and executables
 base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-gateway-mesh-binary"
@@ -17,6 +17,7 @@ executable="$base_dir/chirpstack-gateway-mesh"
 config_dir="$base_dir/config"
 main_config="$config_dir/chirpstack-gateway-mesh-as-border.toml"
 region_config="$config_dir/region_$region.toml"
+channels_config="$config_dir/channels_$region.toml"
 
 # --- Pre-run Checks ---
 
