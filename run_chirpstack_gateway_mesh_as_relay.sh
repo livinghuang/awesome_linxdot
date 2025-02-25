@@ -7,9 +7,9 @@
 # Updated: Added PID check, process termination, improved logging, and robust error handling.
 
 # Default region or user-provided parameter
-region="${1:-as923}"
+region="${1:_as923}"
 echo "Using region: $region"
-logger -t "chirpstack-gateway-mesh" "Service starting with region: $region"
+logger -t "chirpstack-gateway-mesh-as-relay" "Service starting with region: $region"
 
 # Directories and executables
 base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-gateway-mesh-binary"
