@@ -1,19 +1,32 @@
 #!/bin/sh
 
 # Linxdot OpenSource:
-# Purpose: Install and start chirpstack-gateway-mesh service in the background.
+# Purpose: Install and start chirpstack-gateway-mesh service (border or relay) in the background.
 # Author: Living Huang
 # Date: 2025-02-23
+# Updated: Added support for role (border/relay) and region parameters.
 
-region="as923"
-service_file="/etc/init.d/linxdot-chirpstack-gateway-mesh"
+# --- Parameters ---
+
+role="${1:-border}"   # Default: border
+region="${2:-as923}"  # Default: as923
+
+# Validate role
+if [ "$role" != "border" ] && [ "$role" != "relay" ]; then
+    echo "Error: Invalid role '$role'. Use 'border' or 'relay'."
+    exit 1
+fi
+
+service_name="linxdot-chirpstack-gateway-mesh-${role}"
+service_file="/etc/init.d/${service_name}"
 run_script="/opt/awesome_linxdot/run_chirpstack_gateway_mesh.sh"
 
-echo "Step 1: Checking if the ChirpStack Gateway Mesh service is installed..."
+echo "Step 1: Checking if the ChirpStack Gateway Mesh ($role) service is installed..."
 
-# Check if the service file exists
+# --- Service File Creation ---
+
 if [ ! -f "$service_file" ]; then
-    echo "Service not found. Creating service file..."
+    echo "Service not found. Creating service file for role: $role, region: $region..."
 
     cat << EOF > "$service_file"
 #!/bin/sh /etc/rc.common
@@ -22,20 +35,20 @@ START=99
 USE_PROCD=1
 
 start_service() {
-    logger -t "chirpstack-gateway-mesh" "Starting service with region: ${region}..."
+    logger -t "chirpstack-gateway-mesh-$role" "Starting service with role: ${role}, region: ${region}..."
 
     procd_open_instance
-    procd_set_param command "${run_script}" "${region}"
-    procd_set_param respawn 3600 5 0  # respawn: after 3600s (1 hour), max 5 retries with no immediate retry loops
-    procd_set_param stdout 1          # redirect stdout to syslog
-    procd_set_param stderr 1          # redirect stderr to syslog
+    procd_set_param command "${run_script}" "${role}" "${region}"
+    procd_set_param respawn 3600 5 0  # Restart after 3600s, max 5 retries
+    procd_set_param stdout 1          # Redirect stdout to syslog
+    procd_set_param stderr 1          # Redirect stderr to syslog
     procd_close_instance
 
-    logger -t "chirpstack-gateway-mesh" "Service started successfully!"
+    logger -t "chirpstack-gateway-mesh-$role" "Service started successfully!"
 }
 
 stop_service() {
-    logger -t "chirpstack-gateway-mesh" "Stopping service..."
+    logger -t "chirpstack-gateway-mesh-$role" "Stopping service..."
 }
 EOF
 
@@ -48,8 +61,10 @@ EOF
 
     # Start the service immediately
     "$service_file" start
+
+    echo "Service '$service_name' enabled and started."
 else
-    echo "Service already exists."
+    echo "Service '$service_name' already exists."
 fi
 
 echo "Step 2: Service installation and startup completed!"
