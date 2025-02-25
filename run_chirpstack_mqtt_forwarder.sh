@@ -4,42 +4,53 @@
 # Purpose: Run the chirpstack-mqtt-forwarder in the background with continuous monitoring.
 # Author: Living Huang
 # Date: 2025-02-23
-# Updated: Added PID check, process termination, and improved logging.
+# Updated: Combined script to handle multiple configuration files via parameter.
 
-echo "Starting chirpstack-mqtt-forwarder..."
-logger -t "chirpstack-mqtt-forwarder" "Service starting..."
+# --- Input Parameters ---
 
-# Directories and executable
+# Usage: ./run_chirpstack_mqtt_forwarder.sh <config_file>
+config_file="${1:-chirpstack-mqtt-forwarder.toml}"
+
+echo "Starting chirpstack-mqtt-forwarder with configuration: $config_file"
+logger -t "chirpstack-mqtt-forwarder" "Service starting with configuration: $config_file"
+
+# --- Directories and Executables ---
+
 base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-mqtt-forwarder-binary"
 executable="$base_dir/chirpstack-mqtt-forwarder"
-config_file="$base_dir/chirpstack-mqtt-forwarder.toml"
+config_path="$base_dir/$config_file"
 
-# Check if the working directory exists
+# --- Pre-run Checks ---
+
+# Check if working directory exists
 if [ ! -d "$base_dir" ]; then
     echo "Error: Directory $base_dir does not exist."
     logger -t "chirpstack-mqtt-forwarder" "Error: Directory $base_dir not found."
     exit 1
 fi
 
-# Check if the executable exists and is executable
+# Check if executable exists and is executable
 if [ ! -x "$executable" ]; then
     echo "Error: Executable $executable not found or not executable."
     logger -t "chirpstack-mqtt-forwarder" "Error: Executable not found or not executable."
     exit 1
 fi
 
-# Check if the configuration file exists
-if [ ! -f "$config_file" ]; then
-    echo "Error: Configuration file $config_file not found."
-    logger -t "chirpstack-mqtt-forwarder" "Error: Configuration file not found."
+# Check if configuration file exists
+if [ ! -f "$config_path" ]; then
+    echo "Error: Configuration file $config_path not found."
+    logger -t "chirpstack-mqtt-forwarder" "Error: Configuration file $config_path not found."
     exit 1
 fi
 
-# Check if the chirpstack-mqtt-forwarder process is already running
-existing_pid=$(pgrep -f "$executable")
+# --- Process Management ---
+
+# Check if the chirpstack-mqtt-forwarder process with the same config is already running
+existing_pid=$(pgrep -f "$executable -c $config_path")
 if [ -n "$existing_pid" ]; then
     echo "Found existing process (PID: $existing_pid). Stopping it..."
     logger -t "chirpstack-mqtt-forwarder" "Existing process detected (PID: $existing_pid). Attempting to stop it."
+
     kill "$existing_pid"
 
     # Wait until the process terminates
@@ -60,19 +71,21 @@ if [ -n "$existing_pid" ]; then
     logger -t "chirpstack-mqtt-forwarder" "Existing process stopped successfully."
 fi
 
-# Handle termination signals for a graceful shutdown
+# --- Signal Handling ---
+
 trap 'echo "Stopping chirpstack-mqtt-forwarder..."; logger -t "chirpstack-mqtt-forwarder" "Service stopped."; exit 0' INT TERM
 
-# Main loop to keep the service running
+# --- Main Execution Loop ---
+
 cd "$base_dir" || exit 1
 
 while true; do
-    echo "Launching chirpstack-mqtt-forwarder..."
-    logger -t "chirpstack-mqtt-forwarder" "Launching forwarder process."
+    echo "Launching chirpstack-mqtt-forwarder with $config_file..."
+    logger -t "chirpstack-mqtt-forwarder" "Launching process with configuration: $config_file"
 
-    "$executable" -c "$config_file" | logger -t "chirpstack-mqtt-forwarder"
+    "$executable" -c "$config_path" | logger -t "chirpstack-mqtt-forwarder"
 
-    echo "Forwarder process exited unexpectedly. Restarting in 5 seconds..."
+    echo "Process exited unexpectedly. Restarting in 5 seconds..."
     logger -t "chirpstack-mqtt-forwarder" "Process exited unexpectedly. Restarting after 5 seconds."
     sleep 5
 done

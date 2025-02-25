@@ -1,80 +1,70 @@
 #!/bin/sh
 
 # Linxdot OpenSource:
-# Purpose: Stop and remove the chirpstack-gateway-mesh service.
+# Purpose: Uninstall the chirpstack-gateway-mesh service, kill related processes, and clean up.
 # Author: Living Huang
 # Date: 2025-02-23
-# Updated: Added PID checks, force kill fallback, service disabling, and cleanup.
+# Updated: Unified into a single service removal with complete process and file cleanup.
 
-set -e  # Exit immediately if a command exits with a non-zero status
+set -e  # Exit immediately if a command fails
 
-service_file="/etc/init.d/linxdot-chirpstack-gateway-mesh"
 process_name="chirpstack-gateway-mesh"
+service_name="linxdot-chirpstack-gateway-mesh"
+service_file="/etc/init.d/${service_name}"
+pid_file="/var/run/${process_name}.pid"
+lock_file="/tmp/${process_name}.lock"
 
-echo "Step 1: Attempting to stop via init.d service..."
-logger -t "$process_name" "Attempting to stop service."
+echo "Step 1: Stopping and disabling service..."
 
 if [ -f "$service_file" ]; then
+    echo "Stopping service: $service_name..."
     "$service_file" stop || true
-    echo "Service stop issued."
-    logger -t "$process_name" "Service stop issued."
     sleep 2
+
+    echo "Disabling service: $service_name..."
+    "$service_file" disable || true
+
+    echo "Removing service file: $service_file..."
+    rm -f "$service_file"
 else
-    echo "No service file found, proceeding..."
-    logger -t "$process_name" "No service file found."
+    echo "No service file found for $service_name. Skipping."
 fi
 
-echo "Step 2: Killing all running processes..."
-# Find process IDs (PIDs) related to the process name
-pids=$(ps | grep "$process_name" | grep -v grep | grep -v "$0" | awk '{print $1}')
+echo "Step 2: Killing all running processes related to $process_name..."
 
+pids=$(pgrep -f "$process_name")
 if [ -n "$pids" ]; then
-    echo "Found PIDs: $pids. Attempting to kill..."
-    logger -t "$process_name" "Killing PIDs: $pids"
+    echo "Found running processes: $pids. Attempting to kill..."
     for pid in $pids; do
         kill "$pid" && echo "Killed PID $pid" || echo "Failed to kill PID $pid"
     done
 
     sleep 2
 
-    # Check for remaining processes and force kill if necessary
-    remaining_pids=$(ps | grep "$process_name" | grep -v grep | grep -v "$0" | awk '{print $1}')
+    # Force kill if any process remains
+    remaining_pids=$(pgrep -f "$process_name")
     if [ -n "$remaining_pids" ]; then
-        echo "Force killing remaining PIDs: $remaining_pids..."
+        echo "Force killing remaining processes: $remaining_pids..."
         for pid in $remaining_pids; do
             kill -9 "$pid" && echo "Force killed PID $pid" || echo "Failed to force kill PID $pid"
         done
-        logger -t "$process_name" "Force killed remaining PIDs: $remaining_pids"
     else
-        echo "No remaining processes."
-        logger -t "$process_name" "All processes terminated successfully."
+        echo "No remaining processes found."
     fi
 else
-    echo "No running process found."
-    logger -t "$process_name" "No running process found."
+    echo "No running processes found."
 fi
 
-echo "Step 3: Disabling service from autostart..."
-if [ -f "$service_file" ]; then
-    "$service_file" disable || true
-    echo "Service disabled."
-    logger -t "$process_name" "Service disabled from autostart."
-else
-    echo "No service file found."
+echo "Step 3: Cleaning up temporary files..."
+
+if [ -f "$pid_file" ]; then
+    rm -f "$pid_file"
+    echo "PID file removed."
 fi
 
-echo "Step 4: Removing service file..."
-if [ -f "$service_file" ]; then
-    rm -f "$service_file"
-    echo "Service file removed."
-    logger -t "$process_name" "Service file removed."
-else
-    echo "No service file found."
+if [ -f "$lock_file" ]; then
+    rm -f "$lock_file"
+    echo "Lock file removed."
 fi
 
-echo "Step 5: Cleaning up temporary files..."
-[ -f "/var/run/$process_name.pid" ] && rm -f "/var/run/$process_name.pid" && echo "PID file removed." && logger -t "$process_name" "PID file removed."
-[ -f "/tmp/$process_name.lock" ] && rm -f "/tmp/$process_name.lock" && echo "Lock file removed." && logger -t "$process_name" "Lock file removed."
-
-echo "✅ Completed."
-logger -t "$process_name" "Service fully stopped and removed."
+echo "Step 4: Uninstallation completed. All related services and processes have been removed."
