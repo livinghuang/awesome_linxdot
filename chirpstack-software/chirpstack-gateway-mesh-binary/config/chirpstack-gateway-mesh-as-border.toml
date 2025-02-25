@@ -52,7 +52,7 @@
     # encapsulated) will be silently ignored. This option is especially useful
     # for testing, in which case you want to set this to true for the Border
     # Gateway.
-    border_gateway_ignore_direct_uplinks=true
+    border_gateway_ignore_direct_uplinks=false
   
   # Mesh frequencies.
     #
