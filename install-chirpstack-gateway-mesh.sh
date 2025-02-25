@@ -17,7 +17,7 @@ if [ "$role" != "border" ] && [ "$role" != "relay" ]; then
     exit 1
 fi
 
-service_name="linxdot-chirpstack-gateway-mesh-${role}"
+service_name="linxdot-chirpstack-gateway-mesh"
 service_file="/etc/init.d/${service_name}"
 run_script="/opt/awesome_linxdot/run_chirpstack_gateway_mesh.sh"
 
