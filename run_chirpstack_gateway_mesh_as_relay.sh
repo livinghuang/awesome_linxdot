@@ -17,6 +17,7 @@ executable="$base_dir/chirpstack-gateway-mesh"
 config_dir="$base_dir/config"
 main_config="$config_dir/chirpstack-gateway-mesh-as-relay.toml"
 region_config="$config_dir/region_$region.toml"
+channels_config="$config_dir/channels_$region.toml"
 
 # --- Pre-run Checks ---
 
@@ -85,7 +86,7 @@ while true; do
     echo "Launching chirpstack-gateway-mesh with region: $region..."
     logger -t "chirpstack-gateway-mesh" "Launching process with region: $region"
 
-    "$executable" -c "$main_config" -c "$region_config" | logger -t "chirpstack-gateway-mesh"
+    "$executable" -c "$main_config" -c "$region_config" -c "$channels_config" | logger -t "chirpstack-gateway-mesh"
 
     echo "Process exited unexpectedly. Restarting in 5 seconds..."
     logger -t "chirpstack-gateway-mesh" "Process exited unexpectedly. Restarting after 5 seconds."

@@ -38,7 +38,7 @@
   # Max hop count.
     #
     # This defines the maximum number of hops a relayed payload will pass.
-    max_hop_count=3
+    max_hop_count=1
 
   # Heartbeat interval (Relay Gateway only).
     #
@@ -138,7 +138,7 @@
     [backend.mesh_concentratord]
 
       # Event API URL.
-      # event_url="ipc:///tmp/concentratord_event"
+       event_url="ipc:///tmp/concentratord_event"
 
       # Command API URL.
-      # command_url="ipc:///tmp/concentratord_command"
+       command_url="ipc:///tmp/concentratord_command"

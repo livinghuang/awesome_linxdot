@@ -59,7 +59,6 @@
   # The ChirpStack Gateway Mesh will randomly use one of the configured
   # frequencies when relaying uplink and downlink messages.
   frequencies=[                                                              
-923000000,                                                                   
     923200000,
     923400000,
     923600000,
