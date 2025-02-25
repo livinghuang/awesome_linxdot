@@ -1,3 +1,4 @@
+# MQTT forwarder toml
 # Logging settings.
   [logging]
   # Log level.
