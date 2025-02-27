@@ -8,7 +8,7 @@
 region="as923"
 service_file="/etc/init.d/linxdot-chirpstack-concentratord"
 run_script="/opt/awesome_linxdot/run_chirpstack_concentratord.sh"
-luci_source_dir="/opt/awesome_linxdot/chirpstack-software/luci"
+luci_source_dir="/opt/awesome_linxdot/luci"
 luci_controller_dest="/usr/lib/lua/luci/controller"
 luci_view_dest="/usr/lib/lua/luci/view"
 
