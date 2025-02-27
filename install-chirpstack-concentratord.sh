@@ -11,6 +11,8 @@ run_script="/opt/awesome_linxdot/run_chirpstack_concentratord.sh"
 luci_source_dir="/opt/awesome_linxdot/luci"
 luci_controller_dest="/usr/lib/lua/luci/controller"
 luci_view_dest="/usr/lib/lua/luci/view"
+monitor_gateway_id="/opt/awesome_linxdot/awesome-software/monitor_gateway_id-binary/monitor_gateway_id"
+
 
 echo "Step 1: Checking if the ChirpStack Concentratord service is installed..."
 
@@ -80,4 +82,12 @@ rm -rf /tmp/luci-*
 /etc/init.d/rpcd restart
 /etc/init.d/nginx restart  # If using nginx, otherwise use /etc/init.d/uhttpd restart
 
-echo "Step 4: LuCI page is ready! You can find it under Status → ChirpStack"
+echo "Step 4: Executing monitor_gateway_id program..."
+
+# Execute monitor_gateway_id program
+if [ -f "$monitor_gateway_id" ]; then
+    "$monitor_gateway_id" &
+    echo "monitor_gateway_id program started."
+fi
+
+echo "Step 5: LuCI page is ready! You can find it under Status → ChirpStack"
