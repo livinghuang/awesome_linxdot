@@ -1,99 +1,138 @@
-# ChirpStack Docker example
+# ChirpStack Installation Scripts
 
-This repository contains a skeleton to setup the [ChirpStack](https://www.chirpstack.io)
-open-source LoRaWAN Network Server (v4) using [Docker Compose](https://docs.docker.com/compose/).
+This repository contains installation scripts for setting up various ChirpStack components and related services. Each script automates the installation and configuration process for a specific component.
 
-**Note:** Please use this `docker-compose.yml` file as a starting point for testing
-but keep in mind that for production usage it might need modifications. 
+## Installation Scripts
 
-## Directory layout
+### 1. `install-chirpstack.sh`
+Installs the ChirpStack network server and application server, which are essential for managing LoRaWAN devices.
 
-* `docker-compose.yml`: the docker-compose file containing the services
-* `configuration/chirpstack`: directory containing the ChirpStack configuration files
-* `configuration/chirpstack-gateway-bridge`: directory containing the ChirpStack Gateway Bridge configuration
-* `configuration/mosquitto`: directory containing the Mosquitto (MQTT broker) configuration
-* `configuration/postgresql/initdb/`: directory containing PostgreSQL initialization scripts
+#### Script Details:
+The `install-chirpstack.sh` script launches the ChirpStack Concentratord service in the background. It includes process management, region configuration, and logging features.
 
-## Configuration
+**Features:**
+- Supports region configuration (default: `as923`)
+- Verifies required directories and executables
+- Ensures necessary `.toml` configuration files exist
+- Prevents duplicate processes from running
+- Automatically restarts on unexpected termination
 
-This setup is pre-configured for all regions. You can either connect a ChirpStack Gateway Bridge
-instance (v3.14.0+) to the MQTT broker (port 1883) or connect a Semtech UDP Packet Forwarder.
-Please note that:
+**Configuration Files:**
+Located in `chirpstack-software/chirpstack-docker/configuration/chirpstack`:
+- `chirpstack.toml`
+- `channels_<region>.toml`
+- `region_<region>.toml`
 
-* You must prefix the MQTT topic with the region.
-  Please see the region configuration files in the `configuration/chirpstack` for a list
-  of topic prefixes (e.g. eu868, us915_0, au915_0, as923_2, ...).
-* The protobuf marshaler is configured.
-
-This setup also comes with two instances of the ChirpStack Gateway Bridge. One
-is configured to handle the Semtech UDP Packet Forwarder data (port 1700), the
-other is configured to handle the Basics Station protocol (port 3001). Both
-instances are by default configured for EU868 (using the `eu868` MQTT topic
-prefix).
-
-### Reconfigure regions
-
-ChirpStack has at least one configuration of each region enabled. You will find
-the list of `enabled_regions` in `configuration/chirpstack/chirpstack.toml`.
-Each entry in `enabled_regions` refers to the `id` that can be found in the
-`region_XXX.toml` file. This `region_XXX.toml` also contains a `topic_prefix`
-configuration which you need to configure the ChirpStack Gateway Bridge
-UDP instance (see below).
-
-#### ChirpStack Gateway Bridge (UDP)
-
-Within the `docker-compose.yml` file, you must replace the `eu868` prefix in the
-`INTEGRATION__..._TOPIC_TEMPLATE` configuration with the MQTT `topic_prefix` of
-the region you would like to use (e.g. `us915_0`, `au915_0`, `in865`, ...).
-
-#### ChirpStack Gateway Bridge (Basics Station)
-
-Within the `docker-compose.yml` file, you must update the configuration file
-that the ChirpStack Gateway Bridge instance must used. The default is
-`chirpstack-gateway-bridge-basicstation-eu868.toml`. For available
-configuration files, please see the `configuration/chirpstack-gateway-bridge`
-directory.
-
-# Data persistence
-
-PostgreSQL and Redis data is persisted in Docker volumes, see the `docker-compose.yml`
-`volumes` definition.
-
-## Requirements
-
-Before using this `docker-compose.yml` file, make sure you have [Docker](https://www.docker.com/community-edition)
-installed.
-
-## Importing device repository
-
-To import the [lorawan-devices](https://github.com/TheThingsNetwork/lorawan-devices)
-repository (optional step), run the following command:
-
-```bash
-make import-lorawan-devices
+**Usage:**
+```sh
+./install-chirpstack.sh
 ```
 
-This will clone the `lorawan-devices` repository and execute the import command of ChirpStack.
-Please note that for this step you need to have the `make` command installed.
-
-**Note:** an older snapshot of the `lorawan-devices` repository is cloned as the
-latest revision no longer contains a `LICENSE` file.
-
-## Usage
-
-To start the ChirpStack simply run:
-
-```bash
-$ docker-compose up
+**Stopping the Service:**
+```sh
+./stop_chirpstack.sh
 ```
 
-After all the components have been initialized and started, you should be able
-to open http://localhost:8080/ in your browser.
+**Modifying Configuration Files:**
+Stop the service before modifying `.toml` files, then restart it:
+```sh
+./stop_chirpstack.sh
+# Modify configuration files in chirpstack-software/chirpstack-docker/configuration/chirpstack
+./install-chirpstack.sh
+```
 
-##
+### 2. `install-chirpstack-concentratord.sh`
+Installs the ChirpStack Concentratord, which interfaces with LoRa concentrator hardware.
 
-The example includes the [ChirpStack REST API](https://github.com/chirpstack/chirpstack-rest-api).
-You should be able to access the UI by opening http://localhost:8090 in your browser.
+**Usage:**
+```sh
+./install-chirpstack-concentratord.sh
+```
 
-**Note:** It is recommended to use the [gRPC](https://www.chirpstack.io/docs/chirpstack/api/grpc.html)
-interface over the [REST](https://www.chirpstack.io/docs/chirpstack/api/rest.html) interface.
+**Stopping the Service:**
+```sh
+./stop_and_remove_chirpstack_concentratord.sh
+```
+
+**Modifying Configuration Files:**
+Stop the service, update `.toml` files in `chirpstack-software/chirpstack-concentratord-binary/config`, then reinstall:
+```sh
+./stop_and_remove_chirpstack_concentratord.sh
+./install-chirpstack-concentratord.sh
+```
+
+### 3. `install-chirpstack-gateway-mesh.sh`
+Sets up ChirpStack Gateway Mesh for multi-gateway networking.
+
+**Usage:**
+```sh
+./install-chirpstack-gateway-mesh.sh [role] [region]
+```
+
+**Stopping the Service:**
+```sh
+./stop_and_remove_chirpstack_gateway_mesh.sh
+```
+
+**Modifying Configuration Files:**
+Stop the service, edit `.toml` files in `chirpstack-software/chirpstack-gateway-mesh-binary/config`, then reinstall:
+```sh
+./stop_and_remove_chirpstack_gateway_mesh.sh
+./install-chirpstack-gateway-mesh.sh
+```
+
+### 4. `install-chirpstack-mqtt-forwarder.sh`
+Installs the MQTT forwarder to relay LoRaWAN packets.
+
+**Usage:**
+```sh
+./install-chirpstack-mqtt-forwarder.sh [role]
+```
+
+**Stopping the Service:**
+```sh
+./stop_and_remove_chirpstack_mqtt_forwarder.sh
+```
+
+### 5. `install-chirpstack-udp-forwarder.sh`
+Installs the UDP forwarder for gateway communication.
+
+**Usage:**
+```sh
+./install-chirpstack-udp-forwarder.sh
+```
+
+**Stopping the Service:**
+```sh
+./stop_and_remove_chirpstack_udp_forwarder.sh
+```
+
+### 6. `install-lora-pkd-fwd.sh`
+Installs a LoRa packet forwarder for gateway communication.
+
+**Usage:**
+```sh
+./install-lora-pkd-fwd.sh
+```
+
+**Stopping the Service:**
+```sh
+./stop_and_remove_lora_pkt_fwd.sh
+```
+
+## Prerequisites
+Ensure your system meets these requirements before running the scripts:
+- A compatible Linux distribution (such as Ubuntu or OpenWrt)
+- `bash` shell installed
+- Root or sudo privileges
+- Internet connectivity to download dependencies
+
+## License
+This project is open-source and distributed under the MIT License.
+
+## Contribution
+If you find issues or want to contribute improvements, submit a pull request.
+
+## Contact
+For support or questions, use the repository's issue tracker or relevant community forums.
+
