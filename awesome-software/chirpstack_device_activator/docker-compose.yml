@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  activator:
+    image: livinghuang/chirpstack-device-activator:latest
+    container_name: activator
+    ports:
+      - "5050:5050"
+    command: python app.py --host=0.0.0.0
+    restart: unless-stopped
+    networks:
+      - activator-network
+
+networks:
+  activator-network:
+    driver: bridge
