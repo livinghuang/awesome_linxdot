@@ -6,16 +6,73 @@
 # Date: 2025-02-23
 
 # Variables
-system_dir="/opt/awesome_linxdot/chirpstack-software"
-service_file="/etc/init.d/linxdot-chirpstack-service"
+SYSTEM_DIR="/opt/awesome_linxdot/chirpstack-software"
+SERVICE_FILE="/etc/init.d/linxdot-chirpstack-service"
+DOCKER_COMPOSE_CMD="docker compose"
+DOCKER_CONFIG="/etc/docker/daemon.json"
 
-echo "Step 1: Checking if ChirpStack service is installed..."
+echo "Step 1: Checking dependencies..."
+if ! command -v docker > /dev/null 2>&1; then
+    echo "Error: Docker is not installed! Please install Docker first."
+    exit 1
+fi
 
-# Check if service file exists
-if [ ! -f "$service_file" ]; then
-    echo "-------- 2. Service not found. Creating service file."
+if ! docker info > /dev/null 2>&1; then
+    echo "Error: Docker is not running! Please start the Docker service."
+    exit 1
+fi
 
-    cat << 'EOF' > "$service_file"
+# Ensure jq is installed
+if ! command -v jq > /dev/null 2>&1; then
+    echo "Error: jq is not installed! Installing..."
+    opkg update && opkg install jq
+fi
+
+# Step 2: Configure Docker log settings
+echo "Step 2: Configuring Docker log settings..."
+if [ -f "$DOCKER_CONFIG" ]; then
+    if grep -q '"log-driver"' "$DOCKER_CONFIG"; then
+        echo "Docker log settings already configured. Skipping..."
+    else
+        echo "Updating Docker log settings..."
+        jq '. + {"log-driver": "json-file", "log-opts": {"max-size": "10m", "max-file": "3"}}' "$DOCKER_CONFIG" > /tmp/daemon.json && mv /tmp/daemon.json "$DOCKER_CONFIG"
+    fi
+else
+    echo "Creating Docker config file with log settings..."
+    cat <<EOF > "$DOCKER_CONFIG"
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+EOF
+fi
+
+echo "Restarting Docker to apply log settings..."
+/etc/init.d/dockerd restart
+
+# Wait for Docker service to fully start
+echo "Waiting for Docker service to start..."
+RETRY=0
+while ! docker info > /dev/null 2>&1; do
+    sleep 2
+    RETRY=$((RETRY+1))
+    if [ $RETRY -gt 10 ]; then
+        echo "Error: Docker startup timeout! Please check manually."
+        exit 1
+    fi
+done
+echo "Docker service is up and running!"
+
+# Step 3: Checking if ChirpStack service is installed
+echo "Step 3: Checking if ChirpStack service is installed..."
+
+if [ ! -f "$SERVICE_FILE" ] || ! grep -q "chirpstack" "$SERVICE_FILE"; then
+    echo "-------- Service not found or incorrect. Creating service file."
+
+    cat << 'EOF' > "$SERVICE_FILE"
 #!/bin/sh /etc/rc.common
 START=99
 
@@ -26,7 +83,7 @@ start() {
         exit 1
     }
 
-    if docker-compose up -d --remove-orphans; then
+    if docker compose up -d --remove-orphans; then
         logger -t "chirpstack" "ChirpStack service started successfully."
     else
         logger -t "chirpstack" "Failed to start ChirpStack service."
@@ -35,20 +92,21 @@ start() {
 
 stop() {
     logger -t "chirpstack" "Stopping ChirpStack service..."
-    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker && docker-compose down
+    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker && docker compose down
 }
 EOF
 
-    chmod +x "$service_file"
+    chmod +x "$SERVICE_FILE"
     echo "Service file created and made executable."
 
     # Enable the service to start at boot
-    "$service_file" enable
+    "$SERVICE_FILE" enable
 
     # Start the service immediately
-    "$service_file" start
+    "$SERVICE_FILE" start
 else
-    echo "Service already exists. Restarting it..."
+    echo "ChirpStack service already exists. Restarting it..."
+    "$SERVICE_FILE" restart
 fi
 
-echo "Step 2: Installation and service running completed!"
+echo "Step 4: Installation and service startup completed!"
