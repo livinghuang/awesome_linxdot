@@ -83,7 +83,7 @@ start() {
         exit 1
     }
 
-    if docker compose up -d --remove-orphans; then
+    if docker-compose up -d --remove-orphans; then
         logger -t "chirpstack" "ChirpStack service started successfully."
     else
         logger -t "chirpstack" "Failed to start ChirpStack service."
