@@ -8,8 +8,19 @@
 # Variables
 SYSTEM_DIR="/opt/awesome_linxdot/chirpstack-software"
 SERVICE_FILE="/etc/init.d/linxdot-chirpstack-service"
-DOCKER_COMPOSE_CMD="docker compose"
 DOCKER_CONFIG="/etc/docker/daemon.json"
+
+# Detect Docker Compose command
+if command -v docker-compose > /dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+elif command -v docker > /dev/null 2>&1 && docker compose version > /dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD="docker compose"
+else
+    echo "Error: Neither 'docker compose' nor 'docker-compose' is available!"
+    exit 1
+fi
+
+echo "Using Docker Compose command: $DOCKER_COMPOSE_CMD"
 
 echo "Step 1: Checking dependencies..."
 if ! command -v docker > /dev/null 2>&1; then
@@ -72,7 +83,7 @@ echo "Step 3: Checking if ChirpStack service is installed..."
 if [ ! -f "$SERVICE_FILE" ] || ! grep -q "chirpstack" "$SERVICE_FILE"; then
     echo "-------- Service not found or incorrect. Creating service file."
 
-    cat << 'EOF' > "$SERVICE_FILE"
+    cat << EOF > "$SERVICE_FILE"
 #!/bin/sh /etc/rc.common
 START=99
 
@@ -83,7 +94,7 @@ start() {
         exit 1
     }
 
-    if docker-compose up -d --remove-orphans; then
+    if $DOCKER_COMPOSE_CMD up -d --remove-orphans; then
         logger -t "chirpstack" "ChirpStack service started successfully."
     else
         logger -t "chirpstack" "Failed to start ChirpStack service."
@@ -92,7 +103,7 @@ start() {
 
 stop() {
     logger -t "chirpstack" "Stopping ChirpStack service..."
-    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker && docker compose down
+    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker && $DOCKER_COMPOSE_CMD down
 }
 EOF
 
