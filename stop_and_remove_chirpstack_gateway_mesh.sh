@@ -6,7 +6,6 @@
 # Date: 2025-02-23
 # Updated: Unified into a single service removal with complete process and file cleanup.
 
-set -e  # Exit immediately if a command fails
 
 process_name="chirpstack-gateway-mesh"
 service_name="linxdot-chirpstack-gateway-mesh"
@@ -68,3 +67,8 @@ if [ -f "$lock_file" ]; then
 fi
 
 echo "Step 4: Uninstallation completed. All related services and processes have been removed."
+sed -i '/run_mesh_time_sync.sh/d' /etc/crontabs/root
+/etc/init.d/cron restart
+logger -t "chirpstack-gateway-mesh" "Cron job for mesh relay time sync removed."
+
+echo "Step 5: Uninstallation completed. All related services and processes have been removed."

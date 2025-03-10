@@ -69,7 +69,7 @@ fi
 
 # --- Add Cron Job for Relay Role ---
 if [ "$role" = "relay" ]; then
-    echo "*/5 * * * * /opt/awesome_linxdot/awesome-software/mesh_relay_time_sync/mesh_relay_time_sync" > /etc/crontabs/root
+    echo "*/5 * * * * /opt/awesome_linxdot/run_mesh_time_sync.sh" >> /etc/crontabs/root
     /etc/init.d/cron restart
     logger -t "chirpstack-gateway-mesh-$role" "Cron job for mesh relay time sync added."
 fi
