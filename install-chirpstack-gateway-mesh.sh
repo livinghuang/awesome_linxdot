@@ -4,10 +4,9 @@
 # Purpose: Install and start chirpstack-gateway-mesh service (border or relay) in the background.
 # Author: Living Huang
 # Date: 2025-02-23
-# Updated: Added support for role (border/relay) and region parameters.
+# Updated: Improved service handling, cron job placement, and stop functionality.
 
 # --- Parameters ---
-
 role="${1:-border}"   # Default: border
 region="${2:-as923}"  # Default: as923
 
@@ -24,7 +23,6 @@ run_script="/opt/awesome_linxdot/run_chirpstack_gateway_mesh.sh"
 echo "Step 1: Checking if the ChirpStack Gateway Mesh ($role) service is installed..."
 
 # --- Service File Creation ---
-
 if [ ! -f "$service_file" ]; then
     echo "Service not found. Creating service file for role: $role, region: $region..."
 
@@ -49,7 +47,9 @@ start_service() {
 
 stop_service() {
     logger -t "chirpstack-gateway-mesh-$role" "Stopping service..."
+    procd_kill
 }
+
 EOF
 
     # Make the service file executable
@@ -57,14 +57,21 @@ EOF
     echo "Service file created and made executable."
 
     # Enable the service to start on boot
-    "$service_file" enable
+    /etc/init.d/${service_name} enable
 
     # Start the service immediately
-    "$service_file" start
+    /etc/init.d/${service_name} start
 
     echo "Service '$service_name' enabled and started."
 else
     echo "Service '$service_name' already exists."
+fi
+
+# --- Add Cron Job for Relay Role ---
+if [ "$role" = "relay" ]; then
+    echo "*/5 * * * * /opt/awesome_linxdot/awesome-software/mesh_relay_time_sync/mesh_relay_time_sync" > /etc/crontabs/root
+    /etc/init.d/cron restart
+    logger -t "chirpstack-gateway-mesh-$role" "Cron job for mesh relay time sync added."
 fi
 
 echo "Step 2: Service installation and startup completed!"

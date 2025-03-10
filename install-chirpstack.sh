@@ -6,21 +6,9 @@
 # Date: 2025-02-23
 
 # Variables
-SYSTEM_DIR="/opt/awesome_linxdot/chirpstack-software"
-SERVICE_FILE="/etc/init.d/linxdot-chirpstack-service"
+system_dir="/opt/awesome_linxdot/chirpstack-software"
+service_file="/etc/init.d/linxdot-chirpstack-service"
 DOCKER_CONFIG="/etc/docker/daemon.json"
-
-# Detect Docker Compose command
-if command -v docker-compose > /dev/null 2>&1; then
-    DOCKER_COMPOSE_CMD="docker-compose"
-elif command -v docker > /dev/null 2>&1 && docker compose version > /dev/null 2>&1; then
-    DOCKER_COMPOSE_CMD="docker compose"
-else
-    echo "Error: Neither 'docker compose' nor 'docker-compose' is available!"
-    exit 1
-fi
-
-echo "Using Docker Compose command: $DOCKER_COMPOSE_CMD"
 
 echo "Step 1: Checking dependencies..."
 if ! command -v docker > /dev/null 2>&1; then
@@ -33,10 +21,24 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
+# Ensure docker-compose is installed
+if ! command -v docker-compose > /dev/null 2>&1; then
+    echo "Error: 'docker-compose' is not installed! Installing..."
+    opkg update && opkg install docker-compose
+    if ! command -v docker-compose > /dev/null 2>&1; then
+        echo "Error: 'docker-compose' installation failed. Please install it manually."
+        exit 1
+    fi
+fi
+
 # Ensure jq is installed
 if ! command -v jq > /dev/null 2>&1; then
     echo "Error: jq is not installed! Installing..."
     opkg update && opkg install jq
+    if ! command -v jq > /dev/null 2>&1; then
+        echo "Error: jq installation failed. Please install it manually."
+        exit 1
+    fi
 fi
 
 # Step 2: Configure Docker log settings
@@ -64,26 +66,13 @@ fi
 echo "Restarting Docker to apply log settings..."
 /etc/init.d/dockerd restart
 
-# Wait for Docker service to fully start
-echo "Waiting for Docker service to start..."
-RETRY=0
-while ! docker info > /dev/null 2>&1; do
-    sleep 2
-    RETRY=$((RETRY+1))
-    if [ $RETRY -gt 10 ]; then
-        echo "Error: Docker startup timeout! Please check manually."
-        exit 1
-    fi
-done
-echo "Docker service is up and running!"
-
-# Step 3: Checking if ChirpStack service is installed
 echo "Step 3: Checking if ChirpStack service is installed..."
 
-if [ ! -f "$SERVICE_FILE" ] || ! grep -q "chirpstack" "$SERVICE_FILE"; then
-    echo "-------- Service not found or incorrect. Creating service file."
+# Check if service file exists
+if [ ! -f "$service_file" ]; then
+    echo "-------- 2. Service not found. Creating service file."
 
-    cat << EOF > "$SERVICE_FILE"
+    cat << 'EOF' > "$service_file"
 #!/bin/sh /etc/rc.common
 START=99
 
@@ -94,7 +83,7 @@ start() {
         exit 1
     }
 
-    if $DOCKER_COMPOSE_CMD up -d --remove-orphans; then
+    if docker-compose up -d --remove-orphans; then
         logger -t "chirpstack" "ChirpStack service started successfully."
     else
         logger -t "chirpstack" "Failed to start ChirpStack service."
@@ -103,21 +92,20 @@ start() {
 
 stop() {
     logger -t "chirpstack" "Stopping ChirpStack service..."
-    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker && $DOCKER_COMPOSE_CMD down
+    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker && docker-compose down
 }
 EOF
 
-    chmod +x "$SERVICE_FILE"
+    chmod +x "$service_file"
     echo "Service file created and made executable."
 
     # Enable the service to start at boot
-    "$SERVICE_FILE" enable
+    "$service_file" enable
 
     # Start the service immediately
-    "$SERVICE_FILE" start
+    "$service_file" start
 else
-    echo "ChirpStack service already exists. Restarting it..."
-    "$SERVICE_FILE" restart
+    echo "Service already exists. Restarting it..."
 fi
 
-echo "Step 4: Installation and service startup completed!"
+echo "Step 3: Installation and service running completed!"
