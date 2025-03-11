@@ -4,7 +4,7 @@
 # Purpose: Install and start chirpstack-gateway-mesh service (border or relay) in the background.
 # Author: Living Huang
 # Date: 2025-02-23
-# Updated: Improved service handling, cron job placement, and stop functionality.
+# Updated: Improved service handling, added mesh_time_sync support for relay role.
 
 # --- Parameters ---
 role="${1:-border}"   # Default: border
@@ -67,11 +67,10 @@ else
     echo "Service '$service_name' already exists."
 fi
 
-# --- Add Cron Job for Relay Role ---
+# --- If Role is Relay, Start mesh_time_sync ---
 if [ "$role" = "relay" ]; then
-    echo "*/5 * * * * /opt/awesome_linxdot/run_mesh_time_sync.sh" >> /etc/crontabs/root
-    /etc/init.d/cron restart
-    logger -t "chirpstack-gateway-mesh-$role" "Cron job for mesh relay time sync added."
+    echo "Step 2: Installing and starting mesh_time_sync service..."
+    /opt/awesome_linxdot/run_mesh_time_sync.sh
 fi
 
-echo "Step 2: Service installation and startup completed!"
+echo "Step 3: Service installation and startup completed!"

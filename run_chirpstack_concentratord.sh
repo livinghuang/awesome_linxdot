@@ -76,15 +76,18 @@ trap 'echo "Stopping ChirpStack Concentratord..."; logger -t "chirpstack-concent
 cd "$base_dir" || exit 1
 
 while true; do
+    if pgrep -f "$executable" > /dev/null; then
+        echo "Process is already running. No restart needed."
+        sleep 5
+        continue
+    fi
+
     echo "Launching ChirpStack Concentratord..."
     logger -t "chirpstack-concentratord" "Launching concentratord process."
 
-    "$executable" \
-        -c "$concentratord_config" \
-        -c "$channels_config" \
-        -c "$region_config" | logger -t "chirpstack-concentratord"
+    "$executable" -c "$concentratord_config" -c "$channels_config" -c "$region_config"
 
-    echo "ChirpStack Concentratord exited unexpectedly. Restarting in 5 seconds..."
+    echo "Process exited unexpectedly. Restarting in 5 seconds..."
     logger -t "chirpstack-concentratord" "Process exited. Restarting after 5 seconds."
     sleep 5
 done
