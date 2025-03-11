@@ -66,7 +66,7 @@ if [ -f "$lock_file" ]; then
     echo "Lock file removed."
 fi
 
-echo "Step 4: Uninstallation completed. All related services and processes have been removed."
+echo "Step 4: Removing cron job for mesh relay time sync..."
 sed -i '/run_mesh_time_sync.sh/d' /etc/crontabs/root
 /etc/init.d/cron restart
 logger -t "chirpstack-gateway-mesh" "Cron job for mesh relay time sync removed."
