@@ -67,10 +67,4 @@ else
     echo "Service '$service_name' already exists."
 fi
 
-# --- If Role is Relay, Start mesh_time_sync ---
-if [ "$role" = "relay" ]; then
-    echo "Step 2: Installing and starting mesh_time_sync service..."
-    /opt/awesome_linxdot/run_mesh_time_sync.sh
-fi
-
 echo "Step 3: Service installation and startup completed!"
