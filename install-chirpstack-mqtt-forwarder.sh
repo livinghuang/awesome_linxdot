@@ -17,8 +17,11 @@ case "$role" in
   border)
     config_file="chirpstack-mqtt-forwarder-as-gateway-mesh-border.toml"
     ;;
-  relay)
-    config_file="chirpstack-mqtt-forwarder-as-gateway-mesh-relay.toml"
+  multi1)
+    config_file="chirpstack-mqtt-forwarder-as-gateway-mesh-multi1.toml"
+    ;;
+  multi2)
+    config_file="chirpstack-mqtt-forwarder-as-gateway-mesh-multi2.toml"
     ;;
   *)
     config_file="chirpstack-mqtt-forwarder.toml"
