@@ -18,10 +18,10 @@ case "$role" in
     config_file="chirpstack-mqtt-forwarder-as-gateway-mesh-border.toml"
     ;;
   multi1)
-    config_file="chirpstack-mqtt-forwarder-as-gateway-mesh-multi1.toml"
+    config_file="chirpstack-mqtt-forwarder-multi1.toml"
     ;;
   multi2)
-    config_file="chirpstack-mqtt-forwarder-as-gateway-mesh-multi2.toml"
+    config_file="chirpstack-mqtt-forwarder-multi2.toml"
     ;;
   *)
     config_file="chirpstack-mqtt-forwarder.toml"
