@@ -38,7 +38,7 @@
   # Max hop count.
     #
     # This defines the maximum number of hops a relayed payload will pass.
-    max_hop_count=3
+    max_hop_count=7
   
   # Heartbeat interval (Relay Gateway only).
     #
