@@ -19,11 +19,10 @@ set system.@system[0].log_size='512'
 commit system
 EOF
 
-# Restart log service
 echo "Restarting log service..."
 /etc/init.d/log restart
 
-# Step 3: Create log_backup.sh
+# Step 3: Create /usr/bin/log_backup.sh
 echo "Creating /usr/bin/log_backup.sh..."
 cat <<'EOF' > /usr/bin/log_backup.sh
 #!/bin/sh
@@ -53,7 +52,7 @@ fi
 EOF
 chmod +x /usr/bin/log_backup.sh
 
-# Step 4: Create backup_pack.sh
+# Step 4: Create /usr/bin/backup_pack.sh
 echo "Creating /usr/bin/backup_pack.sh..."
 cat <<'EOF' > /usr/bin/backup_pack.sh
 #!/bin/sh
@@ -68,7 +67,7 @@ tar -czf "$BACKUP_TARGET/$ARCHIVE_NAME" *
 EOF
 chmod +x /usr/bin/backup_pack.sh
 
-# Step 5: Create cleanup_old_backup.sh
+# Step 5: Create /usr/bin/cleanup_old_backup.sh
 echo "Creating /usr/bin/cleanup_old_backup.sh..."
 cat <<'EOF' > /usr/bin/cleanup_old_backup.sh
 #!/bin/sh
@@ -78,7 +77,7 @@ find "$BACKUP_DIR" -name "backup_*.tar.gz" -type f -mtime +$KEEP_DAYS -exec rm -
 EOF
 chmod +x /usr/bin/cleanup_old_backup.sh
 
-# Step 6: Create system_health_check.sh
+# Step 6: Create /usr/bin/system_health_check.sh
 echo "Creating /usr/bin/system_health_check.sh..."
 cat <<'EOF' > /usr/bin/system_health_check.sh
 #!/bin/sh
@@ -106,7 +105,25 @@ fi
 EOF
 chmod +x /usr/bin/system_health_check.sh
 
-# Step 7: Setup crontab tasks
+# Step 7: Create /usr/bin/backup_docker_log.sh
+echo "Creating /usr/bin/backup_docker_log.sh..."
+cat <<'EOF' > /usr/bin/backup_docker_log.sh
+#!/bin/sh
+DOCKER_LOG_DIR="/var/lib/docker/containers"
+BACKUP_TARGET="/root/docker_log_backup"
+DATE=$(date +%Y%m%d_%H%M%S)
+ARCHIVE_NAME="docker_logs_$DATE.tar.gz"
+KEEP_DAYS=7
+
+mkdir -p "$BACKUP_TARGET"
+
+find "$DOCKER_LOG_DIR" -name "*.log" | tar -czf "$BACKUP_TARGET/$ARCHIVE_NAME" -T -
+
+find "$BACKUP_TARGET" -name "docker_logs_*.tar.gz" -type f -mtime +$KEEP_DAYS -exec rm -f {} \;
+EOF
+chmod +x /usr/bin/backup_docker_log.sh
+
+# Step 8: Setup crontab
 echo "Updating crontab tasks..."
 mkdir -p /etc/crontabs
 grep -q "/usr/bin/log_backup.sh" /etc/crontabs/root || echo "0 * * * * /usr/bin/log_backup.sh" >> /etc/crontabs/root
@@ -114,13 +131,14 @@ grep -q "mkdir -p /root/backup" /etc/crontabs/root || echo "0 3 * * * mkdir -p /
 grep -q "/usr/bin/backup_pack.sh" /etc/crontabs/root || echo "10 3 * * * /usr/bin/backup_pack.sh" >> /etc/crontabs/root
 grep -q "/usr/bin/cleanup_old_backup.sh" /etc/crontabs/root || echo "20 3 * * * /usr/bin/cleanup_old_backup.sh" >> /etc/crontabs/root
 grep -q "/usr/bin/system_health_check.sh" /etc/crontabs/root || echo "0 2 * * * /usr/bin/system_health_check.sh" >> /etc/crontabs/root
+grep -q "/usr/bin/backup_docker_log.sh" /etc/crontabs/root || echo "30 1 * * * /usr/bin/backup_docker_log.sh" >> /etc/crontabs/root
 grep -q "/sbin/reboot" /etc/crontabs/root || echo "0 4 1 * * /sbin/reboot" >> /etc/crontabs/root
 
-# Step 8: Restart cron
+# Step 9: Restart cron
 echo "Restarting cron service..."
 /etc/init.d/cron restart
 
-# Step 9: Show current disk usage
+# Step 10: Show disk usage
 echo "===== Current /overlay Disk Usage ====="
 df -h /overlay | awk 'NR==1 || NR==2'
 
