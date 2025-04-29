@@ -105,15 +105,24 @@ fi
 EOF
 chmod +x /usr/bin/system_health_check.sh
 
-# Step 7: Create /usr/bin/backup_docker_log.sh
+# Step 7: Create /usr/bin/backup_docker_log.sh (auto detect)
 echo "Creating /usr/bin/backup_docker_log.sh..."
 cat <<'EOF' > /usr/bin/backup_docker_log.sh
 #!/bin/sh
-DOCKER_LOG_DIR="/var/lib/docker/containers"
 BACKUP_TARGET="/root/docker_log_backup"
 DATE=$(date +%Y%m%d_%H%M%S)
 ARCHIVE_NAME="docker_logs_$DATE.tar.gz"
 KEEP_DAYS=7
+
+# Auto detect docker container log path
+if [ -d "/opt/docker/containers" ]; then
+    DOCKER_LOG_DIR="/opt/docker/containers"
+elif [ -d "/var/lib/docker/containers" ]; then
+    DOCKER_LOG_DIR="/var/lib/docker/containers"
+else
+    echo "[INFO] No Docker containers log directory found, skipping backup."
+    exit 0
+fi
 
 mkdir -p "$BACKUP_TARGET"
 
