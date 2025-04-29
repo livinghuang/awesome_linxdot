@@ -37,7 +37,7 @@ FREE_PERCENT=$(df "$OVERLAY_DIR" | awk 'NR==2 {print $(NF-1)}' | tr -d '%')
 
 if [ "$FREE_PERCENT" -lt 5 ]; then
     echo "[WARN] Low disk space ($FREE_PERCENT%) - Deleting oldest backup..." | logger -t log_backup
-    OLDEST_BACKUP=$(ls -t $BACKUP_DIR/backup_*.tar.gz 2>/dev/null | tail -n 1)
+    OLDEST_BACKUP=$(ls -t $BACKUP_DIR/messages_*.log 2>/dev/null | tail -n 1)
     if [ -n "$OLDEST_BACKUP" ]; then
         rm -f "$OLDEST_BACKUP"
         echo "[INFO] Oldest backup $OLDEST_BACKUP deleted." | logger -t log_backup
@@ -105,24 +105,15 @@ fi
 EOF
 chmod +x /usr/bin/system_health_check.sh
 
-# Step 7: Create /usr/bin/backup_docker_log.sh (auto detect)
+# Step 7: Create /usr/bin/backup_docker_log.sh
 echo "Creating /usr/bin/backup_docker_log.sh..."
 cat <<'EOF' > /usr/bin/backup_docker_log.sh
 #!/bin/sh
+DOCKER_LOG_DIR="/opt/docker/containers"
 BACKUP_TARGET="/root/docker_log_backup"
 DATE=$(date +%Y%m%d_%H%M%S)
 ARCHIVE_NAME="docker_logs_$DATE.tar.gz"
 KEEP_DAYS=7
-
-# Auto detect docker container log path
-if [ -d "/opt/docker/containers" ]; then
-    DOCKER_LOG_DIR="/opt/docker/containers"
-elif [ -d "/var/lib/docker/containers" ]; then
-    DOCKER_LOG_DIR="/var/lib/docker/containers"
-else
-    echo "[INFO] No Docker containers log directory found, skipping backup."
-    exit 0
-fi
 
 mkdir -p "$BACKUP_TARGET"
 

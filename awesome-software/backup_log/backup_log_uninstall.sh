@@ -1,34 +1,32 @@
 #!/bin/sh
 
-echo "===== Linxdot One-Key Uninstaller Start ====="
+echo "===== Linxdot System Uninstaller Start ====="
+echo ""
+echo "Warning: This will remove all backup scripts and related crontab entries!"
+read -p "Are you sure you want to continue? (yes/no): " confirm
+if [ "$confirm" != "yes" ]; then
+    echo "Uninstall cancelled."
+    exit 0
+fi
 
-# Step 1: Remove all installed scripts
-echo "Removing scripts from /usr/bin/..."
-
+# Remove scripts
 rm -f /usr/bin/log_backup.sh
 rm -f /usr/bin/backup_pack.sh
 rm -f /usr/bin/cleanup_old_backup.sh
 rm -f /usr/bin/system_health_check.sh
+rm -f /usr/bin/backup_docker_log.sh
 
-echo "Scripts removed."
+# Clean crontab entries
+sed -i '/log_backup.sh/d' /etc/crontabs/root
+sed -i '/backup_pack.sh/d' /etc/crontabs/root
+sed -i '/cleanup_old_backup.sh/d' /etc/crontabs/root
+sed -i '/system_health_check.sh/d' /etc/crontabs/root
+sed -i '/backup_docker_log.sh/d' /etc/crontabs/root
+sed -i '/mkdir -p \/root\/backup/d' /etc/crontabs/root
+sed -i '/\/sbin\/reboot/d' /etc/crontabs/root
 
-# Step 2: Clean crontab entries
-echo "Cleaning crontab..."
-
-if [ -f /etc/crontabs/root ]; then
-    sed -i '/\/usr\/bin\/log_backup.sh/d' /etc/crontabs/root
-    sed -i '/mkdir -p \/root\/backup/d' /etc/crontabs/root
-    sed -i '/\/usr\/bin\/backup_pack.sh/d' /etc/crontabs/root
-    sed -i '/\/usr\/bin\/cleanup_old_backup.sh/d' /etc/crontabs/root
-    sed -i '/\/usr\/bin\/system_health_check.sh/d' /etc/crontabs/root
-    sed -i '/\/sbin\/reboot/d' /etc/crontabs/root
-fi
-
-echo "Crontab cleaned."
-
-# Step 3: Restart cron service
+# Restart cron service
 echo "Restarting cron service..."
 /etc/init.d/cron restart
 
-# Step 4: Final Check
-echo "===== Linxdot One-Key Uninstaller Completed ====="
+echo "===== Linxdot System Uninstaller Completed ====="
