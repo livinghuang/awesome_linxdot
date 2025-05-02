@@ -132,7 +132,8 @@ grep -q "/usr/bin/backup_pack.sh" /etc/crontabs/root || echo "10 3 * * * /usr/bi
 grep -q "/usr/bin/cleanup_old_backup.sh" /etc/crontabs/root || echo "20 3 * * * /usr/bin/cleanup_old_backup.sh" >> /etc/crontabs/root
 grep -q "/usr/bin/system_health_check.sh" /etc/crontabs/root || echo "0 2 * * * /usr/bin/system_health_check.sh" >> /etc/crontabs/root
 grep -q "/usr/bin/backup_docker_log.sh" /etc/crontabs/root || echo "30 1 * * * /usr/bin/backup_docker_log.sh" >> /etc/crontabs/root
-grep -q "/sbin/reboot" /etc/crontabs/root || echo "0 4 1 * * /sbin/reboot" >> /etc/crontabs/root
+grep -q "/usr/bin/system_watchdog.sh" /etc/crontabs/root || echo "*/10 * * * * /usr/bin/system_watchdog.sh" >> /etc/crontabs/root
+grep -q "cron_reboot" /etc/crontabs/root || echo '0 4 1 * * logger -t cron_reboot "monthly reboot"; dmesg > /root/backup/dmesg_before_reboot_$(date +\%Y\%m\%d_\%H\%M).log; /usr/bin/log_backup.sh; /sbin/reboot' >> /etc/crontabs/root
 
 # Step 9: Restart cron
 echo "Restarting cron service..."
@@ -141,5 +142,40 @@ echo "Restarting cron service..."
 # Step 10: Show disk usage
 echo "===== Current /overlay Disk Usage ====="
 df -h /overlay | awk 'NR==1 || NR==2'
+
+# Step 11: Create /usr/bin/system_watchdog.sh
+echo "Creating /usr/bin/system_watchdog.sh..."
+cat <<'EOF' > /usr/bin/system_watchdog.sh
+#!/bin/sh
+
+logger -t system_watchdog "Running system health check..."
+
+RESTART_FLAG=0
+DOCKER_TARGETS="chirpstack packet_forwarder"
+for name in $DOCKER_TARGETS; do
+    docker ps | grep -q "$name"
+    if [ $? -ne 0 ]; then
+        logger -t system_watchdog "[ERROR] Docker container '$name' not running"
+        RESTART_FLAG=1
+    fi
+done
+
+pgrep -f "/usr/sbin/uhttpd" >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    logger -t system_watchdog "[ERROR] LUCI (uhttpd) not running"
+    RESTART_FLAG=1
+fi
+
+FREE_MEM=$(free | grep Mem | awk '{print $4}')
+LOAD_AVG=$(uptime | awk -F'load average: ' '{ print $2 }')
+
+logger -t system_watchdog "Memory free: $FREE_MEM KB, Load: $LOAD_AVG"
+
+if [ "$RESTART_FLAG" -eq 1 ]; then
+    logger -t system_watchdog "[ACTION] Rebooting system due to service failure"
+    /sbin/reboot
+fi
+EOF
+chmod +x /usr/bin/system_watchdog.sh
 
 echo "===== Linxdot One-Key System Installer Completed ====="
