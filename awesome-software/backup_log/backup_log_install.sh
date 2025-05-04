@@ -150,6 +150,13 @@ cat <<'EOF' > /usr/bin/system_watchdog.sh
 
 logger -t system_watchdog "Running system health check..."
 
+# 若系統開機不到 5 分鐘，跳過這次檢查
+UPTIME_MIN=$(awk '{print int($1/60)}' /proc/uptime)
+if [ "$UPTIME_MIN" -lt 5 ]; then
+    logger -t system_watchdog "[INFO] Skipping health check - system just booted (${UPTIME_MIN} min)"
+    exit 0
+fi
+
 RESTART_FLAG=0
 DOCKER_TARGETS="chirpstack packet_forwarder"
 for name in $DOCKER_TARGETS; do
@@ -168,12 +175,16 @@ fi
 
 FREE_MEM=$(free | grep Mem | awk '{print $4}')
 LOAD_AVG=$(uptime | awk -F'load average: ' '{ print $2 }')
-
 logger -t system_watchdog "Memory free: $FREE_MEM KB, Load: $LOAD_AVG"
 
 if [ "$RESTART_FLAG" -eq 1 ]; then
     logger -t system_watchdog "[ACTION] Rebooting system due to service failure"
     /sbin/reboot
+
+    # 等 5 秒，仍未重啟就強制重啟
+    sleep 5
+    logger -t system_watchdog "[WARN] Normal reboot failed, force rebooting now..."
+    exec /sbin/reboot -f
 fi
 EOF
 chmod +x /usr/bin/system_watchdog.sh
