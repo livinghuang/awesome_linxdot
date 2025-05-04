@@ -155,27 +155,28 @@ df -h /overlay | awk 'NR==1 || NR==2'
 cat <<'EOF' > /usr/bin/system_watchdog.sh
 #!/bin/sh
 
+# 記錄 watchdog 腳本執行起始點
 logger -t system_watchdog "Running system health check..."
 
+# 若系統開機未滿 5 分鐘，跳過此次檢查，避免誤判服務尚未啟動
+# Skip health check if system uptime is less than 5 minutes (e.g., just booted)
 UPTIME_MIN=$(awk '{print int($1/60)}' /proc/uptime)
 if [ "$UPTIME_MIN" -lt 5 ]; then
     logger -t system_watchdog "[INFO] Skipping health check - system just booted (${UPTIME_MIN} min)"
     exit 0
 fi
 
-RESTART_FLAG=0
-DOCKER_TARGETS="chirpstack packet_forwarder"
-for name in $DOCKER_TARGETS; do
-    docker ps | grep -q "$name"
-    if [ $? -ne 0 ]; then
-        logger -t system_watchdog "[ERROR] Docker container '$name' not running"
-        RESTART_FLAG=1
-    fi
-done
+# 檢查 Docker daemon 是否正在執行
+if ! pgrep dockerd >/dev/null 2>&1; then
+    logger -t system_watchdog "[ERROR] Docker daemon not running"
+    RESTART_FLAG=1
+fi
 
-pgrep -f "/usr/sbin/uhttpd" >/dev/null 2>&1
-if [ $? -ne 0 ]; then
-    logger -t system_watchdog "[ERROR] LUCI (uhttpd) not running"
+# 檢查 uhttpd (LuCI Web UI) 是否運行
+# 檢查是否有程式監聽 port 80 以確認 HTTP/LuCI 服務是否啟動
+# Check if port 80 is being listened to (indicating HTTP/LuCI service is up)
+if ! netstat -tuln | grep -q ":80.*LISTEN"; then
+    logger -t system_watchdog "[ERROR] No HTTP service (port 80) is listening"
     RESTART_FLAG=1
 fi
 
