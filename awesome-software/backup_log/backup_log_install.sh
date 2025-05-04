@@ -1,8 +1,9 @@
 #!/bin/sh
 
+# ===== Linxdot One-Key System Installer Start =====
 echo "===== Linxdot One-Key System Installer Start ====="
 
-# Step 1: Prepare overlay log directory
+# Step 1: Create overlay log directory to store persistent logs
 if [ ! -d /overlay/log ]; then
     echo "Creating /overlay/log..."
     mkdir -p /overlay/log
@@ -11,7 +12,8 @@ else
     echo "/overlay/log already exists."
 fi
 
-# Step 2: Setup system log config
+# Step 2: Configure system log location and size
+# 將 log 設定存放在 overlay 上，使其可在 reboot 後保留
 echo "Configuring system log settings..."
 uci batch <<EOF
 set system.@system[0].log_file='/overlay/log/messages'
@@ -19,11 +21,13 @@ set system.@system[0].log_size='512'
 commit system
 EOF
 
+# Restart system logging service
+# 重啟系統日誌服務
 echo "Restarting log service..."
 /etc/init.d/log restart
 
-# Step 3: Create /usr/bin/log_backup.sh
-echo "Creating /usr/bin/log_backup.sh..."
+# Step 3: Create log backup script
+# 建立 log 備份腳本，定期備份 overlay/log/messages
 cat <<'EOF' > /usr/bin/log_backup.sh
 #!/bin/sh
 LOG_FILE="/overlay/log/messages"
@@ -52,8 +56,8 @@ fi
 EOF
 chmod +x /usr/bin/log_backup.sh
 
-# Step 4: Create /usr/bin/backup_pack.sh
-echo "Creating /usr/bin/backup_pack.sh..."
+# Step 4: Create backup package script
+# 建立每日打包所有備份檔案的腳本
 cat <<'EOF' > /usr/bin/backup_pack.sh
 #!/bin/sh
 BACKUP_SOURCE="/root/backup"
@@ -67,8 +71,8 @@ tar -czf "$BACKUP_TARGET/$ARCHIVE_NAME" *
 EOF
 chmod +x /usr/bin/backup_pack.sh
 
-# Step 5: Create /usr/bin/cleanup_old_backup.sh
-echo "Creating /usr/bin/cleanup_old_backup.sh..."
+# Step 5: Create old backup cleanup script
+# 清理超過保存天數的打包備份檔案
 cat <<'EOF' > /usr/bin/cleanup_old_backup.sh
 #!/bin/sh
 BACKUP_DIR="/root"
@@ -77,8 +81,8 @@ find "$BACKUP_DIR" -name "backup_*.tar.gz" -type f -mtime +$KEEP_DAYS -exec rm -
 EOF
 chmod +x /usr/bin/cleanup_old_backup.sh
 
-# Step 6: Create /usr/bin/system_health_check.sh
-echo "Creating /usr/bin/system_health_check.sh..."
+# Step 6: Create system health check script
+# 每日檢查 overlay 空間與備份數量狀況
 cat <<'EOF' > /usr/bin/system_health_check.sh
 #!/bin/sh
 OVERLAY_DIR="/overlay"
@@ -105,8 +109,8 @@ fi
 EOF
 chmod +x /usr/bin/system_health_check.sh
 
-# Step 7: Create /usr/bin/backup_docker_log.sh
-echo "Creating /usr/bin/backup_docker_log.sh..."
+# Step 7: Create Docker log backup script
+# 備份 docker container 的 log 文件
 cat <<'EOF' > /usr/bin/backup_docker_log.sh
 #!/bin/sh
 DOCKER_LOG_DIR="/opt/docker/containers"
@@ -123,9 +127,10 @@ find "$BACKUP_TARGET" -name "docker_logs_*.tar.gz" -type f -mtime +$KEEP_DAYS -e
 EOF
 chmod +x /usr/bin/backup_docker_log.sh
 
-# Step 8: Setup crontab
-echo "Updating crontab tasks..."
+# Step 8: Setup crontab tasks
+# 將所有自動備份與監控任務加入 crontab
 mkdir -p /etc/crontabs
+echo "Updating crontab tasks..."
 grep -q "/usr/bin/log_backup.sh" /etc/crontabs/root || echo "0 * * * * /usr/bin/log_backup.sh" >> /etc/crontabs/root
 grep -q "mkdir -p /root/backup" /etc/crontabs/root || echo "0 3 * * * mkdir -p /root/backup/\$(date +\%Y\%m\%d) && cp -r /etc/* /root/backup/\$(date +\%Y\%m\%d)/" >> /etc/crontabs/root
 grep -q "/usr/bin/backup_pack.sh" /etc/crontabs/root || echo "10 3 * * * /usr/bin/backup_pack.sh" >> /etc/crontabs/root
@@ -135,22 +140,23 @@ grep -q "/usr/bin/backup_docker_log.sh" /etc/crontabs/root || echo "30 1 * * * /
 grep -q "/usr/bin/system_watchdog.sh" /etc/crontabs/root || echo "*/10 * * * * /usr/bin/system_watchdog.sh" >> /etc/crontabs/root
 grep -q "cron_reboot" /etc/crontabs/root || echo '0 4 1 * * logger -t cron_reboot "monthly reboot"; dmesg > /root/backup/dmesg_before_reboot_$(date +\%Y\%m\%d_\%H\%M).log; /usr/bin/log_backup.sh; /sbin/reboot' >> /etc/crontabs/root
 
-# Step 9: Restart cron
+# Step 9: Restart cron service
+# 重啟 crontab 排程服務
 echo "Restarting cron service..."
 /etc/init.d/cron restart
 
-# Step 10: Show disk usage
+# Step 10: Show current /overlay disk usage
+# 顯示目前 overlay 區塊使用量
 echo "===== Current /overlay Disk Usage ====="
 df -h /overlay | awk 'NR==1 || NR==2'
 
-# Step 11: Create /usr/bin/system_watchdog.sh
-echo "Creating /usr/bin/system_watchdog.sh..."
+# Step 11: Create watchdog script
+# 建立 watchdog 腳本，當關鍵服務掛掉時觸發重啟並備份 dmesg 與 log
 cat <<'EOF' > /usr/bin/system_watchdog.sh
 #!/bin/sh
 
 logger -t system_watchdog "Running system health check..."
 
-# 若系統開機不到 5 分鐘，跳過這次檢查
 UPTIME_MIN=$(awk '{print int($1/60)}' /proc/uptime)
 if [ "$UPTIME_MIN" -lt 5 ]; then
     logger -t system_watchdog "[INFO] Skipping health check - system just booted (${UPTIME_MIN} min)"
@@ -178,15 +184,32 @@ LOAD_AVG=$(uptime | awk -F'load average: ' '{ print $2 }')
 logger -t system_watchdog "Memory free: $FREE_MEM KB, Load: $LOAD_AVG"
 
 if [ "$RESTART_FLAG" -eq 1 ]; then
-    logger -t system_watchdog "[ACTION] Rebooting system due to service failure"
-    /sbin/reboot
+    TS=$(date +%Y%m%d_%H%M%S)
+    # 將核心訊息儲存起來以利重啟後調查
+    dmesg > "/root/backup/dmesg_watchdog_before_reboot_${TS}.log"
 
-    # 等 5 秒，仍未重啟就強制重啟
+    # 在 overlay log 保留 watchdog 觸發記錄
+    echo "$TS: Reboot triggered due to service failure" >> /overlay/log/watchdog_reboot_history.log
+    
+    # 在系統 logger 中記錄此次重啟
+    logger -t system_watchdog "[ACTION] Rebooting system due to service failure"
+    
+    # 備份當前 overlay 日誌
+    /usr/bin/log_backup.sh
+
+    # 執行正常重啟
+    /sbin/reboot
     sleep 5
+
+    # 若未成功，則強制重啟前再次備份
     logger -t system_watchdog "[WARN] Normal reboot failed, force rebooting now..."
+    /usr/bin/log_backup.sh
+
+    # 強制重啟
     exec /sbin/reboot -f
 fi
 EOF
 chmod +x /usr/bin/system_watchdog.sh
 
+# ===== Linxdot One-Key System Installer Completed =====
 echo "===== Linxdot One-Key System Installer Completed ====="
