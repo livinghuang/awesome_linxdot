@@ -45,7 +45,9 @@ while [ "$start_ts" -le "$end_ts" ]; do
     echo "    等待 crond 觸發… ($SLEEP_SEC 秒)"
     for _ in $(seq 1 $SLEEP_SEC); do printf "."; sleep 1; done; echo " ✅"
     echo "    ⤵ /root 當前內容（時間排序）："
-    ls -lhtr /root | tail || echo "⚠️ 無法讀取 /root 內容"
+    ls -lhtr /root || echo "⚠️ 無法讀取 /root 內容"
+    echo "    🧾 cron log 檢查（messages 最後 10 行）："
+    tail -n 10 /overlay/log/messages | grep -Ei 'backup|system_health' || echo "    ⚠️ 沒有發現備份相關記錄"
   done
   start_ts=$((start_ts + 86400))
 done
