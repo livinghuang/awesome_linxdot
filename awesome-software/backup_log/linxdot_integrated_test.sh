@@ -29,7 +29,7 @@ set -e
 NTP_SERVICE="sysntpd"
 START_DAY="2000-01-01"
 END_DAY="2000-01-09"
-TIMES=("01:30:00" "02:00:00" "03:00:00" "03:10:00" "03:20:00")
+TIMES="01:30:00 02:00:00 03:00:00 03:10:00 03:20:00"
 SLEEP_SEC=61
 FILL_THRESHOLD=5
 FILL_STEP_MB=50
@@ -58,7 +58,7 @@ end_ts=$(date -d "$END_DAY" +%s)
 while [ "$start_ts" -le "$end_ts" ]; do
   day=$(date -d "@$start_ts" +%Y-%m-%d)
   echo "\n🗓 測試日期：$day"
-  for t in "${TIMES[@]}"; do
+  for t in $TIMES; do
     sim_time="$day $t"
     echo " → 模擬系統時間：$sim_time"
     date -s "$sim_time" >/dev/null
