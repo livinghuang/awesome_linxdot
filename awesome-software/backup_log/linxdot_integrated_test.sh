@@ -11,9 +11,9 @@
 # 主要流程：
 #   0. 先停用 NTP（避免測試過程被自動校時）並備份原始時間。
 #   1. 以「天迴圈 + 時間迴圈」方式：
-#       - 從 2000‑01‑01 ~ 2000‑01‑14
+#       - 從 2000‑01‑01 ~ 2000‑01‑09
 #       - 每天模擬 01:30 / 02:00 / 03:00 / 03:10 / 03:20 五個時間點
-#       - 每次 sleep 70 秒，讓 crond 有 1 分多鐘時間觸發排程
+#       - 每次 sleep 61 秒，讓 crond 有 1 分多鐘時間觸發排程
 #   2. 以 dd 填充 /overlay，直到剩餘空間 < 5 %，立即呼叫
 #      /usr/bin/system_health_check.sh 觀察是否清除舊備份。
 #   3. 清理測試填充檔、sync，然後還原原始時間並啟動 NTP。
@@ -26,19 +26,13 @@
 set -e
 
 # --- 可調整參數 -------------------------------------------------------------
-NTP_SERVICE="sysntpd"          # 時間同步服務（OpenWrt 預設）
-START_DAY="2000-01-01"         # 測試開始日期
-END_DAY="2000-01-09"           # 測試結束日期
-TIMES=(                          # 每日要測試的時刻 (24h 格式)
-  "01:30:00"  # backup_docker_log.sh
-  "02:00:00"  # system_health_check.sh
-  "03:00:00"  # backup_etc.sh
-  "03:10:00"  # backup_pack.sh
-  "03:20:00"  # cleanup_old_backup.sh
-)
-SLEEP_SEC=61         # 每次模擬後等待 cron 觸發的秒數 (>60s 為佳)
-FILL_THRESHOLD=5     # /overlay 剩餘低於 % 觸發低空間測試
-FILL_STEP_MB=50      # 每次 dd 寫入大小 (MB)
+NTP_SERVICE="sysntpd"
+START_DAY="2000-01-01"
+END_DAY="2000-01-09"
+TIMES=("01:30:00" "02:00:00" "03:00:00" "03:10:00" "03:20:00")
+SLEEP_SEC=61
+FILL_THRESHOLD=5
+FILL_STEP_MB=50
 OVERLAY_DIR="/overlay"
 FILL_FILE="$OVERLAY_DIR/fill.bin"
 
@@ -48,7 +42,6 @@ FILL_FILE="$OVERLAY_DIR/fill.bin"
 ORIGINAL_DATE=$(date '+%Y-%m-%d %H:%M:%S')
 echo "📌 原始系統時間：$ORIGINAL_DATE"
 
-# 允許 NTP 服務不存在，也不影響測試
 if /etc/init.d/$NTP_SERVICE status >/dev/null 2>&1; then
   echo "⏸️  停用 $NTP_SERVICE ...";
   /etc/init.d/$NTP_SERVICE stop || true
@@ -69,7 +62,12 @@ while [ "$start_ts" -le "$end_ts" ]; do
     sim_time="$day $t"
     echo " → 模擬系統時間：$sim_time"
     date -s "$sim_time" >/dev/null
-    sleep "$SLEEP_SEC"   # 等待 crond 觸發
+    echo "    等待 crond 觸發... ($SLEEP_SEC 秒)"
+    for i in $(seq 1 $SLEEP_SEC); do
+      printf "."
+      sleep 1
+    done
+    echo " ✅"
   done
   start_ts=$((start_ts + 86400))
 done
@@ -79,20 +77,17 @@ done
 ###############################################################################
 echo "\n🚨 低空間測試：填充 $OVERLAY_DIR 直到剩餘 < ${FILL_THRESHOLD}%"
 while : ; do
-  FREE=$(df "$OVERLAY_DIR" | awk 'NR==2{gsub("%","");print $(NF-1)}')
+  FREE=$(df "$OVERLAY_DIR" | awk 'NR==2{gsub("%","",$(NF-1)); print $(NF-1)}')
   [ "$FREE" -le "$FILL_THRESHOLD" ] && break
   dd if=/dev/zero of="$FILL_FILE" bs=1M count=$FILL_STEP_MB oflag=append conv=notrunc 2>/dev/null
   printf "  ‣ 剩餘: %s%%\n" "$FREE"
 done
 
-# 呼叫健康檢查腳本（將檔案過多 & 空間不足清理邏輯跑一次）
 /usr/bin/system_health_check.sh
 
-# 查看 /root/backup 是否刪掉最舊備份
 echo "\n🗂 /root/backup 內容 (最後 10 檔)："
 ls -l /root/backup | tail
 
-# 刪除填充檔，確保空間恢復
 rm -f "$FILL_FILE"
 sync
 
@@ -110,4 +105,6 @@ fi
 ###############################################################################
 # 4. 結束 & 提醒
 ###############################################################################
-echo "\n✅ 綜合測試完成！請檢查 /overlay/log/messages 與 /root/backup 以確認腳本在：\n    • 每日 01:30 / 02:00 / 03:00 / 03:10 / 03:20 皆有觸發\n    • 空間不足時健康檢查腳本有自動刪除最舊備份\n"
+echo "\n✅ 綜合測試完成！請檢查 /overlay/log/messages 與 /root/backup 以確認腳本在："
+echo "    • 每日 01:30 / 02:00 / 03:00 / 03:10 / 03:20 皆有觸發"
+echo "    • 空間不足時健康檢查腳本有自動刪除最舊備份"
