@@ -4,19 +4,19 @@
 ###############################################################################
 
 echo "===== Linxdot System Uninstaller Start ====="
-echo ""
-echo "⚠️  This will remove all backup scripts and related crontab entries!"
-echo "    You may lose scheduled auto-backup, health checks, and watchdogs."
-echo ""
+echo
+echo "⚠️  這會移除所有備份腳本及其對應的 crontab 任務！"
+echo "    之後將失去自動備份、健康檢查與 watchdog 功能。"
+echo
 
 read -p "Are you sure you want to continue? (yes/no): " confirm
-if [ "$confirm" != "yes" ]; then
-    echo "Uninstall cancelled."
-    exit 0
-fi
+case "$confirm" in
+  y|Y|yes|YES) ;;                          # 允許 y / yes
+  *) echo "Uninstall cancelled."; exit 0 ;;
+esac
 
 # -----------------------------------------------------------------------------
-# 1. 移除已安裝的 script symlinks（/usr/bin）與 script 本體（/usr/share/linxdot）
+# 1. 移除腳本（/usr/bin symlink 與 /usr/share/linxdot 本體）
 # -----------------------------------------------------------------------------
 BIN_LIST="
 log_backup.sh
@@ -28,45 +28,50 @@ system_watchdog.sh
 backup_etc.sh
 "
 
-for script in $BIN_LIST; do
-    rm -f "/usr/bin/$script"
-    rm -f "/usr/share/linxdot/$script"
+for f in $BIN_LIST; do
+    rm -f "/usr/bin/$f"
+    rm -f "/usr/share/linxdot/$f"
 done
 
 # -----------------------------------------------------------------------------
-# 2. 清除 /etc/crontabs/root 中的相關排程
+# 2. 清理 crontab 相關排程
 # -----------------------------------------------------------------------------
 CRONTAB=/etc/crontabs/root
-echo "Cleaning crontab entries..."
+echo "Cleaning crontab entries ..."
 
-for keyword in \
-    log_backup.sh \
-    backup_pack.sh \
-    cleanup_old_backup.sh \
-    system_health_check.sh \
-    backup_docker_log.sh \
-    system_watchdog.sh \
-    backup_etc.sh \
-    mkdir\ -p\ /root/backup \
-    cron_reboot \
-    /sbin/reboot
-do
-    sed -i "/$keyword/d" "$CRONTAB"
-done
+KEYWORDS="
+log_backup.sh
+backup_pack.sh
+cleanup_old_backup.sh
+system_health_check.sh
+backup_docker_log.sh
+system_watchdog.sh
+backup_etc.sh
+mkdir -p /root/backup
+cron_reboot
+/sbin/reboot
+"
+
+# 逐條目刪除；若不存在不報錯
+while read -r kw; do
+    [ -n "$kw" ] && sed -i "\#$kw#d" "$CRONTAB" 2>/dev/null || true
+done <<EOF
+$KEYWORDS
+EOF
 
 # -----------------------------------------------------------------------------
-# 3. 移除安裝版本紀錄檔
+# 3. 清除版本標記
 # -----------------------------------------------------------------------------
 rm -f /etc/linxdot_installer.version
 
 # -----------------------------------------------------------------------------
-# 4. 重啟 cron 確保變更生效
+# 4. 重新啟動 cron
 # -----------------------------------------------------------------------------
-echo "Restarting cron service..."
+echo "Restarting cron service ..."
 /etc/init.d/cron restart
 
 # -----------------------------------------------------------------------------
-# 5. 完成訊息
+# 5. 完成
 # -----------------------------------------------------------------------------
-echo ""
+echo
 echo "===== Linxdot System Uninstaller Completed ====="
