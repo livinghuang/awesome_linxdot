@@ -10,35 +10,26 @@
 #
 # 2025‑06‑24 版本（v2025.06.24）
 ###############################################################################
-set -e  # ➜ 任一指令失敗即中止，避免半套安裝
+set -e
 
 VERSION="2025.06.24"
 echo "===== Linxdot One-Key System Installer v$VERSION Start ====="
 
-# -----------------------------------------------------------------------------
-# 0. 參數區 – 需要調整只改這裡
-# -----------------------------------------------------------------------------
-LOG_DIR=/overlay/log              # 日誌目錄 (overlay)
-LOG_FILE="$LOG_DIR/messages"      # logd 寫入檔
-LOG_SIZE=512                      # KiB，BusyBox logd 上限
-BACKUP_DIR=/root/backup           # 所有備份存放根目錄
-MAX_BACKUPS=50                    # 最多保留幾個 backup_*.tar.gz
-DELETE_BATCH=10                   # 超量一次刪幾個
-THRESHOLD=20                      # 剩餘空間 < 20% 就警告
-KEEP_DAYS=7                       # .tar.gz 保留天數
-CRON_FILE=/etc/crontabs/root      # root crontab
-INSTALL_BASE=/usr/share/linxdot   # 所有腳本本體存放處
+LOG_DIR=/overlay/log
+LOG_FILE="$LOG_DIR/messages"
+LOG_SIZE=512
+BACKUP_DIR=/root/backup
+MAX_BACKUPS=50
+DELETE_BATCH=10
+THRESHOLD=20
+KEEP_DAYS=7
+CRON_FILE=/etc/crontabs/root
+INSTALL_BASE=/usr/share/linxdot
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-# -----------------------------------------------------------------------------
-# 1. 建立必要目錄
-# -----------------------------------------------------------------------------
 mkdir -p "$LOG_DIR" "$INSTALL_BASE"
-chmod 755 "$LOG_DIR"  # overlay/log 需可讀寫
+chmod 755 "$LOG_DIR"
 
-# -----------------------------------------------------------------------------
-# 2. 設定 logd 讓系統日誌持久化
-# -----------------------------------------------------------------------------
 uci batch <<EOF
 set system.@system[0].log_file='$LOG_FILE'
 set system.@system[0].log_size='$LOG_SIZE'
@@ -47,12 +38,6 @@ EOF
 /etc/init.d/log restart
 printf 'logd configured to %s (%s KiB)\n' "$LOG_FILE" "$LOG_SIZE"
 
-# -----------------------------------------------------------------------------
-# 3. install_script() – 動態產生腳本 + symlink
-# -----------------------------------------------------------------------------
-# 用法： install_script <name_without_ext> '\n<真正 script 內容>\n'
-#
-# ➜ 內容以 printf '%s\n' 寫入，避免 EOF/quote 陷阱
 install_script() {
   name="$1"; shift
   printf '%s\n' "$@" > "$INSTALL_BASE/$name.sh"
@@ -60,32 +45,99 @@ install_script() {
   ln -sf "$INSTALL_BASE/$name.sh" "/usr/bin/$name.sh"
 }
 
-# --- log_backup.sh (每小時備份 overlay/messages → /root/backup) -------------
-install_script log_backup '\n#!/bin/sh\nPATH=/bin:/sbin:/usr/bin:/usr/sbin\nLOG_FILE="/overlay/log/messages"\nBACKUP_DIR="/root/backup"\nDATE=$(date +%Y%m%d_%H%M%S)\nOVERLAY_DIR=$(mount | awk '\''$3=="/overlay"{print $3}'\'')\n[ -z "$OVERLAY_DIR" ] && OVERLAY_DIR="/"\nUSED=$(df "$OVERLAY_DIR" | awk '\''NR==2{gsub("%","");print $(NF-1)}'\'')\nFREE=$((100-USED))\n[ "$FREE" -lt 5 ] && logger -t log_backup "[WARN] Low disk space ($FREE%)" && \
-  ls -1t "$BACKUP_DIR"/messages_*.log 2>/dev/null | tail -n 1 | xargs -r rm -f\nmkdir -p "$BACKUP_DIR"\n[ -f "$LOG_FILE" ] && cp "$LOG_FILE" "$BACKUP_DIR/messages_$DATE.log" && : > "$LOG_FILE"\n/etc/init.d/log restart\n'
+# log_backup.sh
+install_script log_backup \
+  '#!/bin/sh' \
+  'PATH=/bin:/sbin:/usr/bin:/usr/sbin' \
+  'LOG_FILE="/overlay/log/messages"' \
+  'BACKUP_DIR="/root/backup"' \
+  'DATE=$(date +%Y%m%d_%H%M%S)' \
+  'OVERLAY_DIR=$(mount | awk '\''$3=="/overlay"{print $3}'\'')' \
+  '[ -z "$OVERLAY_DIR" ] && OVERLAY_DIR="/"' \
+  'USED=$(df "$OVERLAY_DIR" | awk '\''NR==2{gsub("%","");print $(NF-1)}'\'')' \
+  'FREE=$((100-USED))' \
+  '[ "$FREE" -lt 5 ] && logger -t log_backup "[WARN] Low disk space ($FREE%)" && \
+    ls -1t "$BACKUP_DIR"/messages_*.log 2>/dev/null | tail -n 1 | xargs -r rm -f' \
+  'mkdir -p "$BACKUP_DIR"' \
+  '[ -f "$LOG_FILE" ] && cp "$LOG_FILE" "$BACKUP_DIR/messages_$DATE.log" && : > "$LOG_FILE"' \
+  '/etc/init.d/log restart'
 
-# --- backup_pack.sh (03:10 打包 /root/backup) --------------------------------
-install_script backup_pack '\n#!/bin/sh\nPATH=/bin:/sbin:/usr/bin:/usr/sbin\nSRC=/root/backup\nDST=/root\nDATE=$(date +%Y%m%d_%H%M%S)\n[ -d "$SRC" ] || exit 0\ntar -C "$SRC" -czf "$DST/backup_$DATE.tar.gz" .\n'
+# backup_pack.sh
+install_script backup_pack \
+  '#!/bin/sh' \
+  'PATH=/bin:/sbin:/usr/bin:/usr/sbin' \
+  'SRC=/root/backup' \
+  'DST=/root' \
+  'DATE=$(date +%Y%m%d_%H%M%S)' \
+  '[ -d "$SRC" ] || exit 0' \
+  'tar -C "$SRC" -czf "$DST/backup_$DATE.tar.gz" .'
 
-# --- cleanup_old_backup.sh (03:20 清理舊 .tar.gz) ----------------------------
-install_script cleanup_old_backup "\n#!/bin/sh\nfind /root -name 'backup_*.tar.gz' -type f -mtime +$KEEP_DAYS -delete\n"
+# cleanup_old_backup.sh
+install_script cleanup_old_backup \
+  '#!/bin/sh' \
+  "find /root -name 'backup_*.tar.gz' -type f -mtime +$KEEP_DAYS -delete"
 
-# --- system_health_check.sh (02:00 健康檢查) ----------------------------------
-install_script system_health_check '\n#!/bin/sh\nPATH=/bin:/sbin:/usr/bin:/usr/sbin\nBACKUP_DIR=/root\nMAX_BACKUPS=50\nDELETE_BATCH=10\nTHRESHOLD=10\nDATE=$(date +%F_%T)\n# --- 判斷 overlay or / -----------------------------\nif mount | grep -q "on / type overlay"; then\n  OVERLAY_DIR="/overlay"\nelse\n  OVERLAY_DIR="/"\nfi\nUSED=$(df "$OVERLAY_DIR" | awk '\''NR==2{gsub("%","");print $(NF-1)}'\'')\nFREE=$((100-USED))\nlogger -t system_health "[INFO] $DATE Overlay free: ${FREE}% (used ${USED}%)"\n[ "$FREE" -lt "$THRESHOLD" ] && logger -t system_health "[WARN] $DATE Disk free below ${THRESHOLD}%!"\nCNT=$(ls -1 "$BACKUP_DIR"/backup_*.tar.gz 2>/dev/null | wc -l)\nif [ "$CNT" -gt "$MAX_BACKUPS" ]; then\n  logger -t system_health "[WARN] $DATE Backup count ${CNT} > ${MAX_BACKUPS}, prune ${DELETE_BATCH}"\n  ls -1t "$BACKUP_DIR"/backup_*.tar.gz | tail -n "$DELETE_BATCH" | xargs -r rm -f\nfi\n'
+# system_health_check.sh
+install_script system_health_check \
+  '#!/bin/sh' \
+  'PATH=/bin:/sbin:/usr/bin:/usr/sbin' \
+  'BACKUP_DIR=/root' \
+  'MAX_BACKUPS=50' \
+  'DELETE_BATCH=10' \
+  'THRESHOLD=10' \
+  'DATE=$(date +%F_%T)' \
+  'if mount | grep -q "on / type overlay"; then' \
+  '  OVERLAY_DIR="/overlay"' \
+  'else' \
+  '  OVERLAY_DIR="/"' \
+  'fi' \
+  'USED=$(df "$OVERLAY_DIR" | awk '\''NR==2{gsub("%","");print $(NF-1)}'\'')' \
+  'FREE=$((100-USED))' \
+  'logger -t system_health "[INFO] $DATE Overlay free: ${FREE}% (used ${USED}%)"' \
+  '[ "$FREE" -lt "$THRESHOLD" ] && logger -t system_health "[WARN] $DATE Disk free below ${THRESHOLD}%!"' \
+  'CNT=$(ls -1 "$BACKUP_DIR"/backup_*.tar.gz 2>/dev/null | wc -l)' \
+  '[ "$CNT" -gt "$MAX_BACKUPS" ] && {' \
+  '  logger -t system_health "[WARN] $DATE Backup count ${CNT} > ${MAX_BACKUPS}, prune ${DELETE_BATCH}"' \
+  '  ls -1t "$BACKUP_DIR"/backup_*.tar.gz | tail -n "$DELETE_BATCH" | xargs -r rm -f' \
+  '}'
 
-# --- backup_docker_log.sh (01:30 備份 Docker container log) -------------------
-install_script backup_docker_log '\n#!/bin/sh\nPATH=/bin:/sbin:/usr/bin:/usr/sbin\nSRC=/opt/docker/containers\nDST=/root/docker_log_backup\nDATE=$(date +%Y%m%d_%H%M%S)\nKEEP=7\nmkdir -p "$DST"\nfind "$SRC" -name "*.log" -print0 | tar --null -czf "$DST/docker_logs_$DATE.tar.gz" --files-from=-\nfind "$DST" -name "docker_logs_*.tar.gz" -mtime +$KEEP -delete\n'
+# backup_docker_log.sh
+install_script backup_docker_log \
+  '#!/bin/sh' \
+  'PATH=/bin:/sbin:/usr/bin:/usr/sbin' \
+  'SRC=/opt/docker/containers' \
+  'DST=/root/docker_log_backup' \
+  'DATE=$(date +%Y%m%d_%H%M%S)' \
+  'KEEP=7' \
+  'mkdir -p "$DST"' \
+  'find "$SRC" -name "*.log" -print0 | tar --null -czf "$DST/docker_logs_$DATE.tar.gz" --files-from=-' \
+  'find "$DST" -name "docker_logs_*.tar.gz" -mtime +$KEEP -delete'
 
-# --- system_watchdog.sh (每 10 分自檢 Dockerd / HTTP) -------------------------
-install_script system_watchdog '\n#!/bin/sh\nPATH=/bin:/sbin:/usr/bin:/usr/sbin\n[ $(awk '\''{print int($1/60)}'\'' /proc/uptime) -lt 5 ] && exit 0\nREBOOT=0\npgrep dockerd >/dev/null 2>&1 || { logger -t watchdog "[ERR] dockerd down"; REBOOT=1; }\nnetstat -tln | grep -q ":80 .*LISTEN" || { logger -t watchdog "[ERR] no http server"; REBOOT=1; }\nif [ "$REBOOT" -eq 1 ]; then\n  dmesg > /root/backup/dmesg_watchdog_$(date +%F_%H-%M-%S).log\n  /usr/bin/log_backup.sh\n  sleep 5\n  logger -t watchdog "[ACTION] rebooting…"\n  reboot\nfi\n'
+# system_watchdog.sh
+install_script system_watchdog \
+  '#!/bin/sh' \
+  'PATH=/bin:/sbin:/usr/bin:/usr/sbin' \
+  '[ $(awk '\''{print int($1/60)}'\'' /proc/uptime) -lt 5 ] && exit 0' \
+  'REBOOT=0' \
+  'pgrep dockerd >/dev/null 2>&1 || { logger -t watchdog "[ERR] dockerd down"; REBOOT=1; }' \
+  'netstat -tln | grep -q ":80 .*LISTEN" || { logger -t watchdog "[ERR] no http server"; REBOOT=1; }' \
+  '[ "$REBOOT" -eq 1 ] && {' \
+  '  dmesg > /root/backup/dmesg_watchdog_$(date +%F_%H-%M-%S).log' \
+  '  /usr/bin/log_backup.sh' \
+  '  sleep 5' \
+  '  logger -t watchdog "[ACTION] rebooting…"' \
+  '  reboot' \
+  '}'
 
-# --- backup_etc.sh (03:00 備份 /etc) -----------------------------------------
-install_script backup_etc '\n#!/bin/sh\nDATE=$(date +%Y%m%d_%H%M%S)\nDIR="/root/backup/etc_$DATE"\nmkdir -p "$DIR"\ncp -r /etc/* "$DIR/"\n'
+# backup_etc.sh
+install_script backup_etc \
+  '#!/bin/sh' \
+  'DATE=$(date +%Y%m%d_%H%M%S)' \
+  'DIR="/root/backup/etc_$DATE"' \
+  'mkdir -p "$DIR"' \
+  'cp -r /etc/* "$DIR/"'
 
-# -----------------------------------------------------------------------------
-# 4. crontab 排程 – 重新寫入
-# -----------------------------------------------------------------------------
-: > "$CRON_FILE"  # 清空現有 crontab
+: > "$CRON_FILE"
 cat >> "$CRON_FILE" <<'EOF'
 SHELL=/bin/sh
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
@@ -101,15 +153,9 @@ EOF
 /etc/init.d/cron restart
 printf 'Cron reloaded.\n'
 
-# -----------------------------------------------------------------------------
-# 5. 顯示系統資訊
-# -----------------------------------------------------------------------------
-printf '===== Current disk usage =====\n'
+echo '===== Current disk usage ====='
 df -h | awk 'NR==1 || $6=="/" || $6=="/overlay"'
 
-# -----------------------------------------------------------------------------
-# 6. 完成
-# -----------------------------------------------------------------------------
 echo "$VERSION" > /etc/linxdot_installer.version
 printf '===== Linxdot One-Key System Installer Completed =====\n'
 ###############################################################################
