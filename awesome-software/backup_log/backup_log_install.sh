@@ -44,8 +44,8 @@ while [ "$start_ts" -le "$end_ts" ]; do
     date -s "$sim_time" >/dev/null
     echo "    等待 crond 觸發… ($SLEEP_SEC 秒)"
     for _ in $(seq 1 $SLEEP_SEC); do printf "."; sleep 1; done; echo " ✅"
-    echo "    ⤵ /root 當前內容："
-    ls -lh /root | tail
+    echo "    ⤵ /root 當前內容（時間排序）："
+    ls -lhtr /root | tail || echo "⚠️ 無法讀取 /root 內容"
   done
   start_ts=$((start_ts + 86400))
 done
