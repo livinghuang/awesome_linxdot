@@ -51,7 +51,7 @@ while [ "$start_ts" -le "$end_ts" ]; do
       dd if=/dev/zero of="$FILL_FILE" bs=1M count=$FILL_STEP_MB oflag=append conv=notrunc 2>/dev/null
       sync
       printf "  ‣ 已填充 %sMB，剩餘約 %sMB\n" "$FILL_STEP_MB" "$FREE_MB"
-      rm -f "$FILL_FILE" /overlay/fill.bin 2>/dev/null || true
+      #rm -f "$FILL_FILE" /overlay/fill.bin 2>/dev/null || true
       sync
     fi
 
