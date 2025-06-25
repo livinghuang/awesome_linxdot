@@ -11,9 +11,9 @@ END_DAY="2000-01-09"            # 測試結束日期
 TIMES="01:30:00 02:00:00 03:00:00 03:10:00 03:20:00"  # 每天模擬時間點
 SLEEP_SEC=61                     # 每次等待 cron 觸發秒數
 FILL_THRESHOLD=10                # 模擬剩餘空間低於 10%%
-FILL_STEP_MB=2800                # 每次填充約 10%% 容量（視實際容量調整）
-LOWER_MB_LIMIT=1500             # 最少保留 1.5 GB
-OVERLAY_DIR="/"                 # 改為填充根目錄
+FILL_STEP_MB=500                # 每次填充約 2% 容量（視實際容量調整）
+LOWER_MB_LIMIT=1500              # 最少保留 1.5 GB
+OVERLAY_DIR="/"                # 改為填充根目錄
 FILL_FILE="$OVERLAY_DIR/fill.bin"
 
 ###############################################################################
@@ -30,7 +30,7 @@ else
 fi
 
 ###############################################################################
-# 1. 逐日逐時模擬 → 驗證 cron 觸發
+# 1. 逐日逐時模擬 → 驗證 cron 觸發 + 模擬填充磁碟空間
 ###############################################################################
 start_ts=$(date -d "$START_DAY" +%s)
 end_ts=$(date -d "$END_DAY" +%s)
@@ -42,8 +42,24 @@ while [ "$start_ts" -le "$end_ts" ]; do
     sim_time="$day $t"
     echo " → 模擬系統時間：$sim_time"
     date -s "$sim_time" >/dev/null
-    echo "    等待 crond 觸發… ($SLEEP_SEC 秒)"
-    for _ in $(seq 1 $SLEEP_SEC); do printf "."; sleep 1; done; echo " ✅"
+
+    start_wait=$(date +%s)
+
+    USED=$(df "$OVERLAY_DIR" | awk 'NR==2{gsub("%","",$(NF-1));print $(NF-1)}')
+    FREE_MB=$(df "$OVERLAY_DIR" | awk 'NR==2{print $(NF-2)}')
+    if [ "$USED" -lt $((100 - FILL_THRESHOLD)) ] && [ "$FREE_MB" -gt "$LOWER_MB_LIMIT" ]; then
+      dd if=/dev/zero of="$FILL_FILE" bs=1M count=$FILL_STEP_MB oflag=append conv=notrunc 2>/dev/null
+      sync
+      printf "  ‣ 已填充 %sMB，剩餘約 %sMB\n" "$FILL_STEP_MB" "$FREE_MB"
+      rm -f "$FILL_FILE" /overlay/fill.bin 2>/dev/null || true
+      sync
+    fi
+
+    now_wait=$(date +%s)
+    elapsed=$((now_wait - start_wait))
+    remain=$((SLEEP_SEC - elapsed))
+    [ $remain -lt 0 ] && remain=0
+    [ "$remain" -gt 0 ] && for _ in $(seq 1 $remain); do printf "."; sleep 1; done; echo " ✅"
 
     echo "    ⤵ /root 當前內容（時間排序）："
     ls -lhtr /root || echo "⚠️ 無法讀取 /root 內容"
@@ -62,7 +78,7 @@ done
 ###############################################################################
 echo "\n🚨 [低空間測試] 填充 $OVERLAY_DIR，直到剩餘 < ${FILL_THRESHOLD}% 或 < ${LOWER_MB_LIMIT}MB…"
 while : ; do
-  USED=$(df "$OVERLAY_DIR" | awk 'NR==2{gsub("%","");print $(NF-1)}')
+  USED=$(df "$OVERLAY_DIR" | awk 'NR==2{gsub("%","",$(NF-1));print $(NF-1)}')
   FREE_MB=$(df "$OVERLAY_DIR" | awk 'NR==2{print $(NF-2)}')
   [ "$USED" -ge $((100 - FILL_THRESHOLD)) ] && { echo "✅ 已達 ${USED}% 使用率"; break; }
   [ "$FREE_MB" -lt "$LOWER_MB_LIMIT" ] && { echo "🛑 可用 < ${LOWER_MB_LIMIT}MB，停止填充"; break; }
@@ -80,7 +96,6 @@ echo "✅ 填充檔已刪除，磁碟已同步。"
 ###############################################################################
 # 3. 還原系統時間 & 重新啟用 NTP
 ###############################################################################
-# 若 ORIGINAL_DATE 為空則略過還原
 if [ -z "$ORIGINAL_DATE" ]; then
   echo "⚠️  ORIGINAL_DATE 未設定，無法還原系統時間。" >&2
 else
@@ -92,7 +107,6 @@ else
   fi
 fi
 
-# 手動進行一次 NTP 同步（使用 Google 時間伺服器）
 echo "🌐 NTP 同步：time.google.com"
 if ntpd -q -p time.google.com >/dev/null 2>&1; then
   echo "✅ 時間同步完成。"
@@ -101,7 +115,6 @@ else
   echo "❌ 時間同步失敗，請檢查網路/NTP。" >&2
 fi
 
-# 重新啟動背景 NTP 服務（若存在）
 if /etc/init.d/$NTP_SERVICE status >/dev/null 2>&1; then
   echo "▶️  重新啟用 $NTP_SERVICE …";
   /etc/init.d/$NTP_SERVICE restart >/dev/null || echo "⚠️  無法重新啟動 $NTP_SERVICE" >&2
