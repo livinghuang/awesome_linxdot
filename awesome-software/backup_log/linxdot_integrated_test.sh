@@ -59,6 +59,7 @@ while [ "$start_ts" -le "$end_ts" ]; do
     elapsed=$((now_wait - start_wait))
     remain=$((SLEEP_SEC - elapsed))
     [ $remain -lt 0 ] && remain=0
+    echo "    ⏳ 等待 $remain 秒以模擬 cron 觸發…"
     [ "$remain" -gt 0 ] && for _ in $(seq 1 $remain); do printf "."; sleep 1; done; echo " ✅"
 
     echo "    ⤵ /root 當前內容（時間排序）："
