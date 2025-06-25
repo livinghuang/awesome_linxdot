@@ -75,7 +75,7 @@ install_script backup_pack \
 # cleanup_old_backup.sh
 install_script cleanup_old_backup \
   '#!/bin/sh' \
-  "find /root -name 'backup_*.tar.gz' -type f -mtime +$KEEP_DAYS -delete"
+  "find /root -name 'backup_*.tar.gz' -type f -mtime +$KEEP_DAYS -exec rm -f {} \;"
 
 # system_health_check.sh
 install_script system_health_check \
