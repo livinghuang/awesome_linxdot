@@ -75,7 +75,11 @@ install_script backup_pack \
 # cleanup_old_backup.sh
 install_script cleanup_old_backup \
   '#!/bin/sh' \
-  "find /root -name 'backup_*.tar.gz' -type f -mtime +$KEEP_DAYS -exec rm -f {} \;"
+  'PATH=/bin:/sbin:/usr/bin:/usr/sbin' \
+  "KEEP_DAYS=${KEEP_DAYS:-7}" \
+  'find /root              -name "backup_*.tar.gz"      -type f -mtime +"$KEEP_DAYS" -exec rm -f {} \;' \
+  'find /root/backup       -name "messages_*.log"       -type f -mtime +"$KEEP_DAYS" -exec rm -f {} \;' \
+  'find /root/docker_log_backup -name "docker_logs_*.tar.gz" -type f -mtime +"$KEEP_DAYS" -exec rm -f {} \;'
 
 # system_health_check.sh
 install_script system_health_check \
@@ -111,7 +115,7 @@ install_script backup_docker_log \
   'KEEP=7' \
   'mkdir -p "$DST"' \
   'find "$SRC" -name "*.log" -print0 | tar --null -czf "$DST/docker_logs_$DATE.tar.gz" --files-from=-' \
-  'find "$DST" -name "docker_logs_*.tar.gz" -mtime +$KEEP -delete'
+  'find "$DST" -name "docker_logs_*.tar.gz" -mtime +$KEEP -exec rm -f {} \;'
 
 # system_watchdog.sh
 install_script system_watchdog \
