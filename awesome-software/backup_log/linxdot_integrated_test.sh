@@ -5,15 +5,15 @@
 set -e
 
 # --- 可調整參數 -------------------------------------------------------------
-NTP_SERVICE="sysntpd"           # NTP 背景服務名稱（OpenWrt 預設）
-START_DAY="2000-01-01"          # 測試起始日期
-END_DAY="2000-01-09"            # 測試結束日期
-TIMES="01:30:00 02:00:00 03:00:00 03:10:00 03:20:00"  # 每天模擬時間點
-SLEEP_SEC=61                     # 每次等待 cron 觸發秒數
-FILL_THRESHOLD=10                # 模擬剩餘空間低於 10%%
-FILL_STEP_MB=500                # 每次填充約 2% 容量（視實際容量調整）
-LOWER_MB_LIMIT=1500              # 最少保留 1.5 GB
-OVERLAY_DIR="/"                # 改為填充根目錄
+NTP_SERVICE="sysntpd"
+START_DAY="2000-01-01"
+END_DAY="2000-01-09"
+TIMES="01:30:00 02:00:00 03:00:00 03:10:00 03:20:00"
+SLEEP_SEC=61
+FILL_THRESHOLD=10
+FILL_STEP_MB=500
+LOWER_MB_LIMIT=1500
+OVERLAY_DIR="/"
 FILL_FILE="$OVERLAY_DIR/fill.bin"
 
 ###############################################################################
@@ -65,10 +65,18 @@ while [ "$start_ts" -le "$end_ts" ]; do
     ls -lhtr /root || echo "⚠️ 無法讀取 /root 內容"
 
     echo "    ⤵ /root/backup 當前內容（時間排序）："
-    ls -lhtr /root/backup | tail || echo "⚠️ 無法讀取 /root/backup 內容"
+    if [ -d /root/backup ]; then
+      ls -lhtr /root/backup | tail
+    else
+      echo "⚠️ /root/backup 不存在"
+    fi
 
     echo "    🧾 cron log 檢查（messages 最後 10 行）："
-    tail -n 10 /overlay/log/messages | grep -Ei 'backup|system_health' || echo "    ⚠️ 沒有發現備份相關記錄"
+    if [ -f /overlay/log/messages ]; then
+      tail -n 10 /overlay/log/messages | grep -Ei 'backup|system_health' || echo "    ⚠️ 沒有發現備份相關記錄"
+    else
+      echo "⚠️ 無法讀取 /overlay/log/messages"
+    fi
   done
   start_ts=$((start_ts + 86400))
 done
@@ -87,10 +95,27 @@ while : ; do
   printf "  ‣ 已填充 %sMB，剩餘約 %sMB\n" "$FILL_STEP_MB" "$FREE_MB"
 done
 
-echo "\n🚦 執行 system_health_check.sh…";/usr/bin/system_health_check.sh
+echo "\n🚦 執行 system_health_check.sh…"
+set +e
+/usr/bin/system_health_check.sh
+SHC_EXIT=$?
+set -e
 
-echo "\n🗂 /root/backup (最後 10 檔)："; ls -l /root/backup | tail
-rm -f "$FILL_FILE" /overlay/fill.bin 2>/dev/null || true; sync
+if [ "$SHC_EXIT" -ne 0 ]; then
+  echo "⚠️ system_health_check.sh 執行失敗，exit code: $SHC_EXIT" >&2
+else
+  echo "✅ system_health_check.sh 執行成功"
+fi
+
+echo "\n🗂 /root/backup (最後 10 檔)："
+if [ -d /root/backup ]; then
+  ls -l /root/backup | tail
+else
+  echo "⚠️ /root/backup 不存在，略過顯示"
+fi
+
+rm -f "$FILL_FILE" /overlay/fill.bin 2>/dev/null || true
+sync
 echo "✅ 填充檔已刪除，磁碟已同步。"
 
 ###############################################################################
@@ -123,12 +148,20 @@ else
 fi
 
 ###############################################################################
-# 4. 完成提示（直接列出結果）
+# 4. 完成提示
 ###############################################################################
 echo "\n📦 /root/backup 目前檔案 (時間排序)："
-ls -lhtr /root/backup | tail
+if [ -d /root/backup ]; then
+  ls -lhtr /root/backup | tail
+else
+  echo "⚠️ /root/backup 不存在"
+fi
 
 echo "\n📜 /overlay/log/messages 最後 20 行："
-tail -n 20 /overlay/log/messages
+if [ -f /overlay/log/messages ]; then
+  tail -n 20 /overlay/log/messages
+else
+  echo "⚠️ 找不到 /overlay/log/messages"
+fi
 
 echo "\n✅ 綜合測試完成。請確認上述輸出是否符合預期。"
