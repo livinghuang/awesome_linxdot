@@ -114,8 +114,11 @@ install_script backup_docker_log \
   'DATE=$(date +%Y%m%d_%H%M%S)' \
   'KEEP=7' \
   'mkdir -p "$DST"' \
-  'find "$SRC" -name "*.log" -print0 | tar --null -czf "$DST/docker_logs_$DATE.tar.gz" --files-from=-' \
+  '[ -d "$SRC" ] || exit 0' \
+  'cd "$SRC" || exit 1' \
+  'find . -name "*.log" -print0 | tar --null -czf "$DST/docker_logs_$DATE.tar.gz" --files-from=-' \
   'find "$DST" -name "docker_logs_*.tar.gz" -mtime +$KEEP -exec rm -f {} \;'
+
 
 # system_watchdog.sh
 install_script system_watchdog \
