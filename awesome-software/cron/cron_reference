@@ -1,0 +1,17 @@
+# === 環境變數設定 ===
+SHELL=/bin/sh
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+# === 備份相關排程 ===
+20  3 * * * /opt/awesome_linxdot/awesome-software/backup/backup_clean_old_record.sh
+30  1 * * * /opt/awesome_linxdot/awesome-software/backup/backup_docker_log.sh
+0   3 * * * /opt/awesome_linxdot/awesome-software/backup/backup_etc.sh
+0   * * * * /opt/awesome_linxdot/awesome-software/backup/backup_log.sh
+10  3 * * * /opt/awesome_linxdot/awesome-software/backup/backup_pack.sh
+
+# === 健康檢查排程 ===
+0   2 * * * /opt/awesome_linxdot/awesome-software/health_check/system_health_check.sh
+*/10 * * * * /opt/awesome_linxdot/awesome-software/watchdog/system_watchdog.sh
+
+# === Reverse SSH 自我恢復（每 5 分鐘確認是否存在連線）===
+*/5 * * * * /opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh.sh

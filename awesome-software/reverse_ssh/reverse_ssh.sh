@@ -1,20 +1,21 @@
 #!/bin/sh
 
-# === 參數設定 ===
-REMOTE_USER="ubuntu"
-REMOTE_HOST="13.55.159.24"
-REMOTE_PORT=22
-REVERSE_PORT=2222      # EC2 對外的 port，用來反向登入 Linxdot
-LOCAL_PORT=22          # Linxdot 本機 ssh port
+CONF_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh.conf"
+KEY_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_id"
 
-KEY_PATH="/root/.ssh/reverse_ssh_id"
-LOG_FILE="/var/log/reverse_ssh.log"
+# === 檢查設定檔 ===
+if [ ! -f "$CONF_PATH" ]; then
+  echo "[❌] 找不到註冊資訊，請先執行 register.sh"
+  exit 1
+fi
 
-# === 開始執行 Reverse SSH ===
-echo "[$(date)] Starting reverse SSH to $REMOTE_HOST:$REMOTE_PORT" >> $LOG_FILE
+REMOTE_HOST=$(jq -r .remote_host "$CONF_PATH")
+REVERSE_PORT=$(jq -r .assigned_reverse_port "$CONF_PATH")
+REMOTE_USER=$(jq -r .user "$CONF_PATH")
 
+# === 建立 Reverse SSH 隧道 ===
 ssh -i "$KEY_PATH" \
-    -o "ServerAliveInterval=60" \
-    -o "ServerAliveCountMax=3" \
-    -N -R "$REVERSE_PORT:localhost:$LOCAL_PORT" \
-    "$REMOTE_USER@$REMOTE_HOST" >> $LOG_FILE 2>&1
+    -o ServerAliveInterval=60 \
+    -o ServerAliveCountMax=3 \
+    -N -R "${REVERSE_PORT}:localhost:22" \
+    "${REMOTE_USER}@${REMOTE_HOST}"
