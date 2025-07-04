@@ -1,0 +1,9 @@
+SHELL=/bin/sh
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+0   * * * * /opt/awesome_linxdot/awesome-software/backup_log/log_backup.sh
+0   3 * * * /opt/awesome_linxdot/awesome-software/backup_log/backup_etc.sh
+10  3 * * * /opt/awesome_linxdot/awesome-software/backup_log/backup_pack.sh
+30  1 * * * /opt/awesome_linxdot/awesome-software/backup_log/backup_docker_log.sh
+20  3 * * * /opt/awesome_linxdot/awesome-software/backup_log/cleanup_old_backup.sh
+0   2 * * * /opt/awesome_linxdot/awesome-software/health_check/system_health_check.sh
+*/10 * * * * /opt/awesome_linxdot/awesome-software/watchdog/system_watchdog.sh
