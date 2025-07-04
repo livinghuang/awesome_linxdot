@@ -15,7 +15,11 @@ REMOTE_USER=$(jq -r .user "$CONF_PATH")
 
 # === 建立 Reverse SSH 隧道 ===
 ssh -i "$KEY_PATH" \
+    -o StrictHostKeyChecking=no \
+    -o UserKnownHostsFile=/dev/null \
     -o ServerAliveInterval=60 \
     -o ServerAliveCountMax=3 \
+    -o ConnectTimeout=10 \
     -N -R "${REVERSE_PORT}:localhost:22" \
-    "${REMOTE_USER}@${REMOTE_HOST}"
+    "${REMOTE_USER}@${REMOTE_HOST}" >> "$LOG_FILE" 2>&1
+
