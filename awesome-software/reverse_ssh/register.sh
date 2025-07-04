@@ -6,10 +6,7 @@ KEY_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_id"
 DEVICE_NAME="$(cat /proc/sys/kernel/hostname)"
 PUB_KEY="$KEY_PATH.pub"
 
-# === 確保工具存在 ===
-if ! command -v curl >/dev/null 2>&1; then
-    opkg update && opkg install curl
-fi
+# === 確保 jq 存在 ===
 if ! command -v jq >/dev/null 2>&1; then
     echo "[❌] jq 未安裝，請執行：opkg install jq"
     exit 1
@@ -20,17 +17,19 @@ if [ ! -f "$KEY_PATH" ]; then
     ssh-keygen -t ed25519 -f "$KEY_PATH" -N ""
 fi
 
-# === 傳送註冊請求 ===
-RESPONSE=$(curl -s -X POST "$API_URL" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "device_name": "'"$DEVICE_NAME"'",
-    "public_key": "'"$(cat $PUB_KEY)"'",
-    "firmware_version": "v1.0"
-  }')
+# === 建立 JSON payload ===
+PAYLOAD=$(printf '{
+  "device_name": "%s",
+  "public_key": "%s",
+  "firmware_version": "v1.0"
+}' "$DEVICE_NAME" "$(cat $PUB_KEY)")
+
+# === 使用 wget 傳送 POST 請求 ===
+RESPONSE=$(wget -qO- --header="Content-Type: application/json" \
+  --post-data="$PAYLOAD" "$API_URL")
 
 if [ -z "$RESPONSE" ] || echo "$RESPONSE" | grep -q "error"; then
-    echo "[❌] 註冊失敗，請檢查網路與 API Server"
+    echo "[❌] 註冊失敗，請確認 API 可連線或請求格式正確"
     exit 1
 fi
 
