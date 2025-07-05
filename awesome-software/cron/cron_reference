@@ -1,23 +1,47 @@
+# ============================================
+# Linxdot 自治系統 - crontab 設定檔（cron_reference）
+# 版本：v1.0.0
+# 最後更新：2025-07-05
+# 維護者：Living Huang
+#
+# 說明：
+# - 本排程檔為 Linxdot 自動化作業的標準排程表
+# - 透過 cron_sync.sh 自動套用至 /etc/crontabs/root
+# - 若要修改排程，請於 GitHub 編輯本檔案並推送
+# - 無需手動備份，版本已由 Git 控管
+# ============================================
+
 # === 環境變數設定 ===
+# cron job 執行時預設使用的 shell 與路徑
 SHELL=/bin/sh
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
-# === 備份相關排程 ===
+# === 備份相關排程（每日定時備份系統資料與日誌）===
+# 清除舊備份記錄（每日 03:20 執行）
 20  3 * * * /opt/awesome_linxdot/awesome-software/backup/backup_clean_old_record.sh
+# 備份 Docker 容器 log（每日 01:30 執行）
 30  1 * * * /opt/awesome_linxdot/awesome-software/backup/backup_docker_log.sh
+# 備份 /etc 設定檔（每日 03:00 執行）
 0   3 * * * /opt/awesome_linxdot/awesome-software/backup/backup_etc.sh
+# 每小時備份 log 檔（整點執行）
 0   * * * * /opt/awesome_linxdot/awesome-software/backup/backup_log.sh
+# 打包所有備份檔（每日 03:10 執行）
 10  3 * * * /opt/awesome_linxdot/awesome-software/backup/backup_pack.sh
 
 # === 健康檢查排程 ===
+# 每日執行系統健康檢查（02:00 執行）
 0   2 * * * /opt/awesome_linxdot/awesome-software/health_check/system_health_check.sh
+# 每 10 分鐘執行系統 watchdog（防止異常停止）
 */10 * * * * /opt/awesome_linxdot/awesome-software/watchdog/system_watchdog.sh
 
-# === Reverse SSH 自我恢復（每 5 分鐘確認是否存在連線）===
+# === Reverse SSH 自我恢復 ===
+# 每 5 分鐘檢查是否存在反向 SSH 連線，若無則自動重連
 */5 * * * * /opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh.sh
 
-# === GitHub 同步更新（每 5 分鐘）===
+# === GitHub 同步更新機制 ===
+# 每 5 分鐘檢查 GitHub Repo 是否有更新（只有變更才會 pull）
 */5 * * * * /opt/awesome_linxdot/awesome-software/github_sync/github_sync.sh
 
-# === Cron 同步更新（每 5 分鐘）===
+# === Cron 任務表同步 ===
+# 每 5 分鐘將 repo 中 cron_reference 套用至系統 crontab（cron_self-heal）
 */5 * * * * /opt/awesome_linxdot/awesome-software/cron/cron_sync.sh
