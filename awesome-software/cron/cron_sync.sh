@@ -22,3 +22,4 @@ chmod 600 "$CRON_DST"
 /etc/init.d/cron restart
 
 echo "[✅] crontab 已更新並套用"
+echo "$(date): crontab updated from $CRON_SRC" >> /var/log/cron_sync.log
