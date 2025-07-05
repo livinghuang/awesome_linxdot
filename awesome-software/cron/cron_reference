@@ -36,7 +36,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 # === Reverse SSH 自我恢復 ===
 # 每 5 分鐘檢查是否存在反向 SSH 連線，若無則自動重連
-*/5 * * * * /opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_bootstrap.sh
+#*/5 * * * * /opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_bootstrap.sh
 
 # === GitHub 同步更新機制 ===
 # 每 5 分鐘檢查 GitHub Repo 是否有更新（只有變更才會 pull）
