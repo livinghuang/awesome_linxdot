@@ -1,43 +1,30 @@
 #!/bin/sh
 #
-# github_sync.sh
+# github_sync.sh - 自動從 GitHub 拉更新（強制覆蓋本地改動）
 #
-# 這支腳本會：
-# 1. 進入 Linxdot 上的本地 Git 專案資料夾（/opt/awesome_linxdot）
-# 2. 使用 git fetch 取得 GitHub 上的最新變更（不影響目前目錄內容）
-# 3. 使用 git diff --quiet 判斷目前版本與 GitHub 上的最新版本是否不同
-# 4. 如果有更新：
-#    - 執行 git pull 拉下最新版本
-#    - 執行自定義腳本 ./do_something.sh（你可以在這裡重啟服務、套用設定等）
-# 5. 如果沒更新：寫入 log 表示無變化
+# 用法：搭配 crontab 每 5 分鐘執行
+# crontab: */5 * * * * /opt/awesome_linxdot/github_sync.sh
 #
-# 用法建議：搭配 cron job 每 5 分鐘執行（可見下方說明）
-# Log 位置：/var/log/linxdot_sync.log
-#
-# 建議 crontab 設定（每 5 分鐘執行一次）：
-# */5 * * * * /opt/awesome_linxdot/github_sync.sh
-#
+# 請注意：本版本會強制 reset 當前目錄回到 GitHub 上的最新狀態！
 
-# 移動到指定的 repo 目錄，若不存在就退出
 cd /opt/awesome_linxdot || exit 1
 
-# 取得遠端（origin/main）的最新資訊，但不合併
+# 抓取 GitHub 上最新的 commit（不會改動目錄）
 git fetch origin main
 
-# 檢查本地 HEAD（當前版本）與遠端 origin/main 是否不同
+# 判斷是否有變更（HEAD vs origin/main）
 if ! git diff --quiet HEAD origin/main; then
-    # 有變更，記錄時間與訊息到 log
-    echo "$(date): New update found" >> /var/log/linxdot_sync.log
+    echo "$(date): Update detected. Forcing reset to origin/main." >> /var/log/linxdot_sync.log
 
-    # 拉下更新（合併進來）
-    git pull
+    # 強制還原到 GitHub 上的最新版本（清除本地更改）
+    git reset --hard origin/main
 
-    # 執行你自定義的操作，例如：
-    # - 重新啟動服務：systemctl restart xxx
-    # - 套用新配置：cp config.json /etc/
-    # - 更新腳本：./install.sh
-    ./do_something.sh
+    # 執行更新後的操作
+    if [ -x ./do_something.sh ]; then
+        ./do_something.sh
+    else
+        echo "$(date): do_something.sh not found or not executable." >> /var/log/linxdot_sync.log
+    fi
 else
-    # 沒有變更，紀錄時間與訊息到 log
-    echo "$(date): No change" >> /var/log/linxdot_sync.log
+    echo "$(date): No change." >> /var/log/linxdot_sync.log
 fi
