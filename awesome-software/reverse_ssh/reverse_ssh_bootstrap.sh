@@ -93,8 +93,8 @@ while true; do
       -N -R "${REVERSE_PORT}:localhost:22" \
       "${REMOTE_USER}@${REMOTE_HOST}" >> "$LOG_FILE" 2>&1
 
-  echo "[$(date)] 🔁 SSH 連線中斷，10 秒後重試" >> "$LOG_FILE"
-  sleep 10
+  echo "[$(date)] 🔁 SSH 連線中斷，600 秒後重試" >> "$LOG_FILE"
+  sleep 600
 done
 
 # 離開前移除 lock（理論上不會執行到這）
