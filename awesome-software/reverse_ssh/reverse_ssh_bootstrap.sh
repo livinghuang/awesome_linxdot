@@ -7,7 +7,14 @@ LOG_FILE="/var/log/reverse_ssh.log"
 LOCK_FILE="/tmp/reverse_ssh.lock"
 TMP_PAYLOAD="/tmp/register_payload.json"
 API_URL="http://13.55.159.24:8080/register"
-DEVICE_NAME="$(cat /proc/sys/kernel/hostname)"
+DEVICE_MAC=$(cat /sys/class/net/eth0/address 2>/dev/null | tr -d ':')
+if [ -n "$DEVICE_MAC" ]; then
+  DEVICE_NAME="Linxdot-$DEVICE_MAC"
+else
+  DEVICE_NAME="Linxdot-$(cat /proc/sys/kernel/hostname)"
+fi
+
+
 
 # === 建立 log 檔案（如無）===
 touch "$LOG_FILE"
