@@ -6,7 +6,7 @@ KEY_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_id"
 LOG_FILE="/var/log/reverse_ssh.log"
 LOCK_FILE="/tmp/reverse_ssh.lock"
 TMP_PAYLOAD="/tmp/register_payload.json"
-API_URL="http://13.55.159.24:8080/register"
+API_URL="http://13.55.159.24:8081/register"
 DEVICE_MAC=$(cat /sys/class/net/eth0/address 2>/dev/null | tr -d ':')
 if [ -n "$DEVICE_MAC" ]; then
   DEVICE_NAME="Linxdot-$DEVICE_MAC"
@@ -93,8 +93,8 @@ while true; do
       -N -R "${REVERSE_PORT}:localhost:22" \
       "${REMOTE_USER}@${REMOTE_HOST}" >> "$LOG_FILE" 2>&1
 
-  echo "[$(date)] 🔁 SSH 連線中斷，600 秒後重試" >> "$LOG_FILE"
-  sleep 600
+  echo "[$(date)] 🔁 SSH 連線中斷，10 秒後重試" >> "$LOG_FILE"
+  sleep 10
 done
 
 # 離開前移除 lock（理論上不會執行到這）
