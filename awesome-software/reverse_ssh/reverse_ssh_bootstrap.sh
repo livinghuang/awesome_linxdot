@@ -6,7 +6,7 @@ KEY_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_id"
 LOG_FILE="/var/log/reverse_ssh.log"
 LOCK_FILE="/tmp/reverse_ssh.lock"
 TMP_PAYLOAD="/tmp/register_payload.json"
-API_URL="http://13.55.159.24:8080/register"
+API_URL="http://13.55.159.24:8081/register"
 DEVICE_MAC=$(cat /sys/class/net/eth0/address 2>/dev/null | tr -d ':')
 if [ -n "$DEVICE_MAC" ]; then
   DEVICE_NAME="Linxdot-$DEVICE_MAC"
