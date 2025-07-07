@@ -1,0 +1,42 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+SCRIPT="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_bootstrap_v4.sh"
+NAME="reverse_ssh"
+PID_FILE="/tmp/reverse_ssh.lock"
+LOG_FILE="/var/log/reverse_ssh.log"
+
+start() {
+    echo "Starting $NAME..."
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        if [ -d "/proc/$PID" ]; then
+            echo "$NAME already running (PID $PID)"
+            return 0
+        fi
+    fi
+
+    sh "$SCRIPT" &
+    echo "$NAME started" >> "$LOG_FILE"
+}
+
+stop() {
+    echo "Stopping $NAME..."
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        if [ -d "/proc/$PID" ]; then
+            kill "$PID"
+            echo "Killed process $PID" >> "$LOG_FILE"
+        fi
+        rm -f "$PID_FILE"
+    fi
+    echo "$NAME stopped" >> "$LOG_FILE"
+}
+
+restart() {
+    stop
+    sleep 1
+    start
+}

@@ -26,12 +26,6 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 0   2 * * * /opt/awesome_linxdot/awesome-software/health_check/system_health_check.sh >> /var/log/health_check.log 2>&1
 */10 * * * * /opt/awesome_linxdot/awesome-software/watchdog/system_watchdog.sh >> /var/log/system_watchdog.log 2>&1
 
-# 延後 Reverse SSH 開機後第一次執行（在 bootstrap script 中 sleep 30）
-@reboot sleep 30 && /opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_bootstrap.sh >> /var/log/reverse_ssh.log 2>&1
-
-# === Reverse SSH 自我恢復（改為每 15 分鐘）===
-*/15 * * * * /opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_bootstrap.sh >> /var/log/reverse_ssh.log 2>&1
-
 # === GitHub 同步更新機制（每日 00:20 執行一次）===
 20  0 * * * /opt/awesome_linxdot/awesome-software/github_sync/github_sync.sh >> /var/log/github_sync.log 2>&1
 
