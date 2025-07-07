@@ -15,7 +15,7 @@ echo "[INFO] 安裝 ChirpStack Device Activator..."
 }
 
 echo "[INFO] 安裝 Reverse SSH 服務..."
-/opt/awesome_linxdot/awesome-software/reverse_ssh/install-reverse_ssh.sh || {
+/opt/awesome_linxdot/awesome-software/reverse_ssh/install_reverse_ssh.sh || {
   echo "[ERROR] 安裝 Reverse SSH 失敗" >&2
   exit 1
 }
