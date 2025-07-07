@@ -7,9 +7,9 @@
 
 # Variables
 system_dir="/opt/awesome_linxdot/awesome_software/chirpstack_device_activator"
-service_file="/etc/init.d/chirpstack-device-activator"
+service_file="/etc/init.d/chirpstack_device_activator"
 
-echo "Step 1: Checking if chirpstack-device-activator is installed..."
+echo "Step 1: Checking if chirpstack_device_activator is installed..."
 
 # Check if service file exists
 if [ ! -f "$service_file" ]; then
@@ -20,25 +20,25 @@ if [ ! -f "$service_file" ]; then
 START=99
 
 start() {
-    logger -t "chirpstack-device-activator" "Starting ChirpStack-device-activator service..."
+    logger -t "chirpstack_device_activator" "Starting ChirpStack_device_activator service..."
     cd /opt/awesome_linxdot/awesome_software/chirpstack_device_activator || {
-        logger -t "chirpstack-device-activator" "Error: Failed to change directory."
+        logger -t "chirpstack_device_activator" "Error: Failed to change directory."
         return 1
     }
 
     docker-compose up -d --remove-orphans
     if [ $? -eq 0 ]; then
-        logger -t "chirpstack-device-activator" "ChirpStack service started successfully."
+        logger -t "chirpstack_device_activator" "ChirpStack service started successfully."
     else
-        logger -t "chirpstack-device-activator" "Error: Failed to start ChirpStack service."
+        logger -t "chirpstack_device_activator" "Error: Failed to start ChirpStack service."
         return 1
     fi
 }
 
 stop() {
-    logger -t "chirpstack-device-activator" "Stopping ChirpStack-device-activator service..."
+    logger -t "chirpstack_device_activator" "Stopping chirpstack_device_activator service..."
     cd /opt/awesome_linxdot/awesome_software/chirpstack_device_activator || {
-        logger -t "chirpstack-device-activator" "Error: Failed to change directory."
+        logger -t "chirpstack_device_activator" "Error: Failed to change directory."
         return 1
     }
     docker-compose down
@@ -49,13 +49,13 @@ EOF
     echo "Service file created and made executable."
 
     # Enable the service to start at boot
-    /etc/init.d/chirpstack-device-activator enable
+    /etc/init.d/chirpstack_device_activator enable
 
     # Start the service immediately
-    /etc/init.d/chirpstack-device-activator start
+    /etc/init.d/chirpstack_device_activator start
 else
     echo "Service already exists. Restarting it..."
-    /etc/init.d/chirpstack-device-activator restart
+    /etc/init.d/chirpstack_device_activator restart
 fi
 
 echo "Step 2: Installation and service running completed!"

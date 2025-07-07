@@ -5,15 +5,6 @@ INSTALL_DIR="/opt/awesome_linxdot/awesome_software/reverse_ssh"
 INITD_TARGET="/etc/init.d/reverse_ssh"
 SCRIPT_TARGET="$INSTALL_DIR/reverse_ssh.sh"
 
-# === 建立目錄 ===
-echo "[*] 建立目錄 $INSTALL_DIR"
-mkdir -p "$INSTALL_DIR"
-
-# === 複製主腳本 ===
-echo "[*] 複製 reverse_ssh.sh 至 $SCRIPT_TARGET"
-cp reverse_ssh.sh "$SCRIPT_TARGET"
-chmod +x "$SCRIPT_TARGET"
-
 # === 複製 init.d 腳本 ===
 echo "[*] 複製 init.d 腳本至 $INITD_TARGET"
 cp reverse_ssh.initd "$INITD_TARGET"
