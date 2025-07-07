@@ -85,10 +85,13 @@ if [ -z "$REMOTE_HOST" ] || [ -z "$REVERSE_PORT" ] || [ -z "$REMOTE_USER" ]; the
 fi
 
 # === 使用 nohup 執行背景反向 SSH 隧道連線 ===
-echo "[$(date)] 🚀 啟動 Reverse SSH 至 $REMOTE_USER@$REMOTE_HOST:$REVERSE_PORT" >> "$LOG_FILE"
+echo "[$(date)] 🧪 啟動 SSH 背景程序（測試模式）" >> "$LOG_FILE"
 
 nohup /bin/sh -c "
+  echo \"[\$(date)] 🧪 進入 while 迴圈\" >> '$LOG_FILE'
   while true; do
+    echo \"[\$(date)] ⚙️ 嘗試建立 SSH 連線...\" >> '$LOG_FILE'
+
     ssh -i '$KEY_PATH' \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
@@ -101,6 +104,7 @@ nohup /bin/sh -c "
     echo \"[\$(date)] 🔁 SSH 連線中斷，10 秒後重試\" >> '$LOG_FILE'
     sleep 10
   done
-" > /dev/null 2>&1 &
+" >> "$LOG_FILE" 2>&1 &
 
-echo "[$(date)] ✅ Reverse SSH 背景啟動完成" >> "$LOG_FILE"
+echo "[$(date)] ✅ 背景程序已啟動（請觀察 log 是否進入 while）" >> "$LOG_FILE"
+
