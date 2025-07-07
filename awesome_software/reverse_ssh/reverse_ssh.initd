@@ -3,7 +3,7 @@
 START=99
 STOP=10
 
-SCRIPT_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh.sh"
+SCRIPT_PATH="/opt/awesome_linxdot/awesome_software/reverse_ssh/reverse_ssh.sh"
 LOG_FILE="/var/log/reverse_ssh.log"
 PID_FILE="/tmp/reverse_ssh.pid"
 

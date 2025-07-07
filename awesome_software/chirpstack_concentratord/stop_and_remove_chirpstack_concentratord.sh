@@ -5,8 +5,8 @@
 
 set -e  # Exit immediately if any command fails
 
-service_file="/etc/init.d/linxdot-chirpstack-concentratord"
-process_name="chirpstack-concentratord-sx1302"
+service_file="/etc/init.d/linxdot_chirpstack_concentratord"
+process_name="chirpstack_concentratord_sx1302"
 
 echo "Step 1: Attempting to stop ChirpStack Concentratord via init.d service..."
 logger -t "$process_name" "Attempting to stop service."

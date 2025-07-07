@@ -6,7 +6,7 @@
 # Date: 2025-02-28
 
 # Variables
-system_dir="/opt/awesome_linxdot/awesome-software/chirpstack_device_activator"
+system_dir="/opt/awesome_linxdot/awesome_software/chirpstack_device_activator"
 service_file="/etc/init.d/chirpstack-device-activator"
 
 echo "Step 1: Checking if chirpstack-device-activator is installed..."
@@ -21,7 +21,7 @@ START=99
 
 start() {
     logger -t "chirpstack-device-activator" "Starting ChirpStack-device-activator service..."
-    cd /opt/awesome_linxdot/awesome-software/chirpstack_device_activator || {
+    cd /opt/awesome_linxdot/awesome_software/chirpstack_device_activator || {
         logger -t "chirpstack-device-activator" "Error: Failed to change directory."
         return 1
     }
@@ -37,7 +37,7 @@ start() {
 
 stop() {
     logger -t "chirpstack-device-activator" "Stopping ChirpStack-device-activator service..."
-    cd /opt/awesome_linxdot/awesome-software/chirpstack_device_activator || {
+    cd /opt/awesome_linxdot/awesome_software/chirpstack_device_activator || {
         logger -t "chirpstack-device-activator" "Error: Failed to change directory."
         return 1
     }

@@ -41,12 +41,12 @@ Stop the service before modifying `.toml` files, then restart it:
 ./install-chirpstack.sh
 ```
 
-### 2. `install-chirpstack-concentratord.sh`
+### 2. `install-chirpstack_concentratord.sh`
 Installs the ChirpStack Concentratord, which interfaces with LoRa concentrator hardware.
 
 **Usage:**
 ```sh
-./install-chirpstack-concentratord.sh
+./install-chirpstack_concentratord.sh
 ```
 
 **Stopping the Service:**
@@ -55,10 +55,10 @@ Installs the ChirpStack Concentratord, which interfaces with LoRa concentrator h
 ```
 
 **Modifying Configuration Files:**
-Stop the service, update `.toml` files in `chirpstack-software/chirpstack-concentratord-binary/config`, then reinstall:
+Stop the service, update `.toml` files in `chirpstack-software/chirpstack_concentratord_sx1302/config`, then reinstall:
 ```sh
 ./stop_and_remove_chirpstack_concentratord.sh
-./install-chirpstack-concentratord.sh
+./install-chirpstack_concentratord.sh
 ```
 
 ### 3. `install-chirpstack-gateway-mesh.sh`
@@ -75,7 +75,7 @@ Sets up ChirpStack Gateway Mesh for multi-gateway networking.
 ```
 
 **Modifying Configuration Files:**
-Stop the service, edit `.toml` files in `chirpstack-software/chirpstack-gateway-mesh-binary/config`, then reinstall:
+Stop the service, edit `.toml` files in `chirpstack-software/chirpstack-gateway-mesh_sx1302/config`, then reinstall:
 ```sh
 ./stop_and_remove_chirpstack_gateway_mesh.sh
 ./install-chirpstack-gateway-mesh.sh

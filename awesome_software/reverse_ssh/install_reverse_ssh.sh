@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # === 安裝目錄設定 ===
-INSTALL_DIR="/opt/awesome_linxdot/awesome-software/reverse_ssh"
+INSTALL_DIR="/opt/awesome_linxdot/awesome_software/reverse_ssh"
 INITD_TARGET="/etc/init.d/reverse_ssh"
 SCRIPT_TARGET="$INSTALL_DIR/reverse_ssh.sh"
 

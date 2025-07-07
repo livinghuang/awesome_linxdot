@@ -1,17 +1,17 @@
 #!/bin/sh
 
 # Linxdot OpenSource:
-# Purpose: Install and start chirpstack-concentratord service, then copy LuCI files.
+# Purpose: Install and start chirpstack_concentratord service, then copy LuCI files.
 # Author: Living Huang
 # Date: 2025-02-23
 
 region="as923"
-service_file="/etc/init.d/linxdot-chirpstack-concentratord"
-run_script="/opt/awesome_linxdot/run_chirpstack_concentratord.sh"
+service_file="/etc/init.d/linxdot_chirpstack_concentratord"
+run_script="/opt/awesome_linxdot/chirpstack_concentratord/run_chirpstack_concentratord.sh"
 luci_source_dir="/opt/awesome_linxdot/luci"
 luci_controller_dest="/usr/lib/lua/luci/controller"
 luci_view_dest="/usr/lib/lua/luci/view"
-monitor_gateway_id="/opt/awesome_linxdot/awesome-software/monitor_gateway_id-binary/monitor_gateway_id"
+monitor_gateway_id="/opt/awesome_linxdot/awesome_software/monitor_gateway_id_binary/monitor_gateway_id"
 
 
 echo "Step 1: Checking if the ChirpStack Concentratord service is installed..."
@@ -27,7 +27,7 @@ START=99
 USE_PROCD=1
 
 start_service() {
-    logger -t "chirpstack-concentratord" "Starting service with region: ${region}..."
+    logger -t "chirpstack_concentratord" "Starting service with region: ${region}..."
 
     procd_open_instance
     procd_set_param command "${run_script}" "${region}"
@@ -36,11 +36,11 @@ start_service() {
     procd_set_param stderr 1          # Redirect stderr to syslog
     procd_close_instance
 
-    logger -t "chirpstack-concentratord" "Service started successfully!"
+    logger -t "chirpstack_concentratord" "Service started successfully!"
 }
 
 stop_service() {
-    logger -t "chirpstack-concentratord" "Stopping service..."
+    logger -t "chirpstack_concentratord" "Stopping service..."
 }
 EOF
 

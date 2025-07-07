@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # === [基本設定] ===
-BASE_DIR="/opt/awesome_linxdot/awesome-software/reverse_ssh"
+BASE_DIR="/opt/awesome_linxdot/awesome_software/reverse_ssh"
 CONF_PATH="$BASE_DIR/reverse_ssh.conf"
 KEY_PATH="$BASE_DIR/reverse_ssh_id"
 LOG_FILE="/var/log/reverse_ssh.log"

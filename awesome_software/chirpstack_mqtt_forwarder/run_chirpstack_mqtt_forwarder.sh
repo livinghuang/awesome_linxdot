@@ -16,7 +16,7 @@ logger -t "chirpstack-mqtt-forwarder" "Service starting with configuration: $con
 
 # --- Directories and Executables ---
 
-base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-mqtt-forwarder-binary"
+base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-mqtt-forwarder_sx1302"
 executable="$base_dir/chirpstack-mqtt-forwarder"
 config_path="$base_dir/$config_file"
 

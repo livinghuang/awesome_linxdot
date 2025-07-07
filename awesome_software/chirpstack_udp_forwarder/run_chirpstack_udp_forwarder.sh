@@ -10,7 +10,7 @@ echo "Starting chirpstack-udp-forwarder..."
 logger -t "chirpstack-udp-forwarder" "Service starting..."
 
 # Directories and executable
-base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-udp-forwarder-binary"
+base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-udp-forwarder_sx1302"
 executable="$base_dir/chirpstack-udp-forwarder"
 config_file="$base_dir/chirpstack-udp-forwarder.toml"
 

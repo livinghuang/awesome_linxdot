@@ -197,7 +197,7 @@ Now, the script will execute automatically and update `gatewayid.txt`.
 ### 1. Simulate a Log Entry
 
 ```sh
-logger -t chirpstack-concentratord "Gateway ID retrieved, gateway_id: \"0016c001f141f857\""
+logger -t chirpstack_concentratord "Gateway ID retrieved, gateway_id: \"0016c001f141f857\""
 ```
 
 ### 2. Manually Run the Script
@@ -237,7 +237,7 @@ Expected output:
    ```
 2. If no result, add a test log entry:
    ```sh
-   logger -t chirpstack-concentratord "Gateway ID retrieved, gateway_id: \"123456abcdef\""
+   logger -t chirpstack_concentratord "Gateway ID retrieved, gateway_id: \"123456abcdef\""
    ```
 
 ### Web Page Not Loading Gateway ID
