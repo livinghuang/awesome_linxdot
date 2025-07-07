@@ -34,19 +34,34 @@ echo "[INFO] 停用 lora_pkt_fwd..."
 echo "[INFO] 停用舊的 Linxdot ChirpStack 服務..."
 /etc/init.d/linxdot-chripstack-service stop
 /etc/init.d/linxdot-chripstack-service disable
+/etc/init.d/linxdot-chripstack-service remove || {
+  echo "[ERROR] 停用舊的 Linxdot ChirpStack 服務失敗" >&2
+  exit 1
+}
 
 #stop and disable old linxdot check service(it is for miner)
 echo "[INFO] 停用舊的 Linxdot Check 服務..."
 /etc/init.d/linxdot_check stop
 /etc/init.d/linxdot_check disable
+/etc/init.d/linxdot_check remove || {
+  echo "[ERROR] 停用舊的 Linxdot Check 服務失敗" >&2
+  exit 1
+}
 
 #stop and disable old linxdot setup and watchcat service
 echo "[INFO] 停用舊的 Linxdot Setup 和 Watchcat 服務..."
 /etc/init.d/linxdot_setup stop
 /etc/init.d/linxdot_setup disable
-/etc/init.d/linxdot_watchcat stop
-/etc/init.d/linxdot_watchcat disable
-
+/etc/init.d/linxdot_setup remove || {
+  echo "[ERROR] 停用舊的 Linxdot Setup 服務失敗" >&2
+  exit 1
+}
+/etc/init.d/watchcat stop
+/etc/init.d/watchcat disable
+/etc/init.d/watchcat remove || {
+  echo "[ERROR] 停用舊的 Watchcat 服務失敗" >&2
+  exit 1
+}
 
 # #install local ChirpStack Server
 # echo "[INFO] 安裝本地 ChirpStack Server..."
