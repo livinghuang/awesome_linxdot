@@ -1,12 +1,13 @@
 #!/bin/sh
 
-# Script Name: initial_awesome_linxdot.sh
-# Purpose: Clean crontab and prepare the system for Linxdot customization
-# Author: [Your Name]
-# Date: [Today's Date]
+# initial awesome linxdot script
 
-echo "Step 1: Cleaning crontab..."
-echo "" > /etc/crontabs/root  # This will clear all crontab jobs
-/etc/init.d/cron restart  # Restart cron service to apply changes
+# === Cron 任務表同步 ===
+/opt/awesome_linxdot/awesome-software/cron/cron_sync.sh
 
-echo "Crontab cleaned successfully!"
+# === 安裝 ChirpStack Device Activator 服務 ===
+/opt/awesome_linxdot/awesome-software/install-chirpstack_device_activator.sh
+
+# === 安裝 Reverse SSH 服務 ===
+/opt/awesome_linxdot/awesome-software/install-reverse_ssh.sh
+
