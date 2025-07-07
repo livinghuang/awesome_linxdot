@@ -11,7 +11,7 @@ echo "[INFO] 設定 Cron 任務同步..."
 
 #install ChirpStack Device Activator
 echo "[INFO] 安裝 ChirpStack Device Activator..."
-/opt/awesome_linxdot/awesome_software/chirpstack_device_activator/install-chirpstack_device_activator.sh || {
+/opt/awesome_linxdot/awesome_software/chirpstack_device_activator/install_chirpstack_device_activator.sh || {
   echo "[ERROR] 安裝 ChirpStack Device Activator 失敗" >&2
   exit 1
 }
