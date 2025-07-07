@@ -1,12 +1,12 @@
 #!/bin/sh
 
+# === 設定參數 ===
 CONF_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh.conf"
 KEY_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_id"
 LOG_FILE="/var/log/reverse_ssh.log"
 LOCK_FILE="/tmp/reverse_ssh.lock"
 TMP_PAYLOAD="/tmp/register_payload.json"
 API_URL="http://52.43.133.220:8081/register"
-
 DEVICE_MAC=$(cat /sys/class/net/eth0/address 2>/dev/null | tr -d ':')
 if [ -n "$DEVICE_MAC" ]; then
   DEVICE_NAME="Linxdot-$DEVICE_MAC"
@@ -14,17 +14,21 @@ else
   DEVICE_NAME="Linxdot-$(cat /proc/sys/kernel/hostname)"
 fi
 
+
+
 # === 建立 log 檔案（如無）===
 touch "$LOG_FILE"
 
-# === 啟動 dropbear（如未啟動）===
-if ! echo | nc localhost 22 >/dev/null 2>&1; then
-  echo "[$(date)] ⚠️ 本地 SSH port 22 未開啟，嘗試啟動 dropbear" >> "$LOG_FILE"
-  /etc/init.d/dropbear start
-  sleep 2
+# === 判斷是否為金鑰輪替時段（每天 00:00 ~ 00:09）===
+NOW_HOUR=$(date +%H)
+NOW_MIN=$(date +%M)
+
+if [ "$NOW_HOUR" = "00" ] && [ "$NOW_MIN" -lt 10 ]; then
+  echo "[$(date)] 🔁 輪替時段內（00:00~00:10），刪除舊 SSH 金鑰" >> "$LOG_FILE"
+  rm -f "$KEY_PATH" "$KEY_PATH.pub"
 fi
 
-# === 若金鑰不存在則產生 ===
+# === 若金鑰不存在則產生（首次或被輪替後）===
 if [ ! -f "$KEY_PATH" ]; then
   echo "[$(date)] 🔐 產生新 SSH 金鑰" >> "$LOG_FILE"
   ssh-keygen -t ed25519 -f "$KEY_PATH" -N ""
@@ -55,22 +59,20 @@ fi
 echo "$RESPONSE" > "$CONF_PATH"
 echo "[$(date)] ✅ 註冊成功，資訊寫入 $CONF_PATH" >> "$LOG_FILE"
 
-# === 清除舊連線（如有）===
+# === 若已有連線進程存在則跳過 ===
 if [ -f "$LOCK_FILE" ]; then
   OLD_PID=$(cat "$LOCK_FILE")
   if [ -d "/proc/$OLD_PID" ]; then
-    echo "[$(date)] ⚠️ 舊連線進程存在 (PID $OLD_PID)，先行終止" >> "$LOG_FILE"
-    kill "$OLD_PID"
-    sleep 2
+    echo "[$(date)] ⚠️ Reverse SSH 已在執行中 (PID $OLD_PID)，跳過啟動" >> "$LOG_FILE"
+    exit 0
   fi
-  rm -f "$LOCK_FILE"
 fi
 echo $$ > "$LOCK_FILE"
 
 # === 讀取連線參數 ===
-REMOTE_HOST=$(grep -o '"remote_host": *"[^"]*"' "$CONF_PATH" | cut -d'"' -f4)
-REVERSE_PORT=$(grep -o '"assigned_reverse_port": *[0-9]*' "$CONF_PATH" | grep -o '[0-9]*')
-REMOTE_USER=$(grep -o '"user": *"[^"]*"' "$CONF_PATH" | cut -d'"' -f4)
+REMOTE_HOST=$(jq -r .remote_host "$CONF_PATH")
+REVERSE_PORT=$(jq -r .assigned_reverse_port "$CONF_PATH")
+REMOTE_USER=$(jq -r .user "$CONF_PATH")
 
 if [ -z "$REMOTE_HOST" ] || [ -z "$REVERSE_PORT" ] || [ -z "$REMOTE_USER" ]; then
   echo "[$(date)] ❌ 設定讀取錯誤，請檢查 $CONF_PATH" >> "$LOG_FILE"
@@ -80,7 +82,7 @@ fi
 
 echo "[$(date)] 🚀 建立 Reverse SSH 至 $REMOTE_USER@$REMOTE_HOST:$REVERSE_PORT" >> "$LOG_FILE"
 
-# === 建立永續連線 ===
+# === 建立永續連線（失敗會自動重試）===
 while true; do
   ssh -i "$KEY_PATH" \
       -o StrictHostKeyChecking=no \
@@ -94,3 +96,6 @@ while true; do
   echo "[$(date)] 🔁 SSH 連線中斷，10 秒後重試" >> "$LOG_FILE"
   sleep 10
 done
+
+# 離開前移除 lock（理論上不會執行到這）
+rm -f "$LOCK_FILE"
