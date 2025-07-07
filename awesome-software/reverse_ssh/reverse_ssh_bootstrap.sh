@@ -18,7 +18,7 @@ fi
 touch "$LOG_FILE"
 
 # === 啟動 dropbear（如未啟動）===
-if ! nc -z localhost 22; then
+if ! echo | nc localhost 22 >/dev/null 2>&1; then
   echo "[$(date)] ⚠️ 本地 SSH port 22 未開啟，嘗試啟動 dropbear" >> "$LOG_FILE"
   /etc/init.d/dropbear start
   sleep 2
@@ -68,9 +68,9 @@ fi
 echo $$ > "$LOCK_FILE"
 
 # === 讀取連線參數 ===
-REMOTE_HOST=$(jq -r .remote_host "$CONF_PATH")
-REVERSE_PORT=$(jq -r .assigned_reverse_port "$CONF_PATH")
-REMOTE_USER=$(jq -r .user "$CONF_PATH")
+REMOTE_HOST=$(grep -o '"remote_host": *"[^"]*"' "$CONF_PATH" | cut -d'"' -f4)
+REVERSE_PORT=$(grep -o '"assigned_reverse_port": *[0-9]*' "$CONF_PATH" | grep -o '[0-9]*')
+REMOTE_USER=$(grep -o '"user": *"[^"]*"' "$CONF_PATH" | cut -d'"' -f4)
 
 if [ -z "$REMOTE_HOST" ] || [ -z "$REVERSE_PORT" ] || [ -z "$REMOTE_USER" ]; then
   echo "[$(date)] ❌ 設定讀取錯誤，請檢查 $CONF_PATH" >> "$LOG_FILE"
