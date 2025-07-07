@@ -3,40 +3,41 @@
 START=99
 STOP=10
 
-SCRIPT="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh_bootstrap_v4.sh"
-NAME="reverse_ssh"
-PID_FILE="/tmp/reverse_ssh.lock"
+SCRIPT_PATH="/opt/awesome_linxdot/awesome-software/reverse_ssh/reverse_ssh.sh"
 LOG_FILE="/var/log/reverse_ssh.log"
+PID_FILE="/tmp/reverse_ssh.pid"
 
 start() {
-    echo "Starting $NAME..."
-    if [ -f "$PID_FILE" ]; then
-        PID=$(cat "$PID_FILE")
-        if [ -d "/proc/$PID" ]; then
-            echo "$NAME already running (PID $PID)"
-            return 0
-        fi
-    fi
+  echo "Starting reverse SSH..."
 
-    sh "$SCRIPT" &
-    echo "$NAME started" >> "$LOG_FILE"
+  # 防止重複啟動
+  if [ -f "$PID_FILE" ] && kill -0 "$(cat $PID_FILE)" 2>/dev/null; then
+    echo "Already running (PID $(cat $PID_FILE))"
+    return 1
+  fi
+
+  # 背景啟動腳本，並記錄 PID
+  (
+    sh "$SCRIPT_PATH"
+  ) &
+
+  echo $! > "$PID_FILE"
+  echo "reverse SSH started with PID $(cat $PID_FILE)"
 }
 
 stop() {
-    echo "Stopping $NAME..."
-    if [ -f "$PID_FILE" ]; then
-        PID=$(cat "$PID_FILE")
-        if [ -d "/proc/$PID" ]; then
-            kill "$PID"
-            echo "Killed process $PID" >> "$LOG_FILE"
-        fi
-        rm -f "$PID_FILE"
-    fi
-    echo "$NAME stopped" >> "$LOG_FILE"
-}
+  echo "Stopping reverse SSH..."
 
-restart() {
-    stop
-    sleep 1
-    start
+  if [ -f "$PID_FILE" ]; then
+    PID=$(cat "$PID_FILE")
+    if kill -0 "$PID" 2>/dev/null; then
+      kill "$PID"
+      echo "Stopped process $PID"
+    else
+      echo "Process $PID not running"
+    fi
+    rm -f "$PID_FILE"
+  else
+    echo "No PID file found"
+  fi
 }
