@@ -1,30 +1,30 @@
 #!/bin/sh
 
 # Linxdot OpenSource:
-# Purpose: Install and start the chirpstack-mqtt-forwarder as a background service.
+# Purpose: Install and start the chirpstack_mqtt_forwarder as a background service.
 # Author: Living Huang
-# Date: 2025-02-23
+# Date: 2025-07-08
 # Updated: Accepts simplified arguments (border or relay) and maps them to config files.
 
 # --- Parameters and Variables ---
 
 role="${1:-default}"  # Default role is 'default' if no argument is provided
-service_file="/etc/init.d/linxdot-chirpstack-mqtt-forwarder"
+service_file="/etc/init.d/linxdot_chirpstack_mqtt_forwarder"
 script_to_run="/opt/awesome_linxdot/run_chirpstack_mqtt_forwarder.sh"
 
 # Map roles to configuration files
 case "$role" in
   border)
-    config_file="chirpstack-mqtt-forwarder-as-gateway-mesh-border.toml"
+    config_file="chirpstack_mqtt_forwarder_as_gateway_mesh_border.toml"
     ;;
   multi1)
-    config_file="chirpstack-mqtt-forwarder-multi1.toml"
+    config_file="chirpstack_mqtt_forwarder_multi1.toml"
     ;;
   multi2)
-    config_file="chirpstack-mqtt-forwarder-multi2.toml"
+    config_file="chirpstack_mqtt_forwarder_multi2.toml"
     ;;
   *)
-    config_file="chirpstack-mqtt-forwarder.toml"
+    config_file="chirpstack_mqtt_forwarder.toml"
     ;;
 esac
 
@@ -43,7 +43,7 @@ START=99
 USE_PROCD=1
 
 start_service() {
-    logger -t "chirpstack-mqtt-forwarder" "Starting ChirpStack MQTT forwarder with config: $config_file..."
+    logger -t "chirpstack_mqtt_forwarder" "Starting ChirpStack MQTT forwarder with config: $config_file..."
 
     procd_open_instance
     procd_set_param command "$script_to_run" "$config_file"
@@ -52,11 +52,11 @@ start_service() {
     procd_set_param stderr 1          # Redirect stderr to syslog
     procd_close_instance
 
-    logger -t "chirpstack-mqtt-forwarder" "Service started successfully!"
+    logger -t "chirpstack_mqtt_forwarder" "Service started successfully!"
 }
 
 stop_service() {
-    logger -t "chirpstack-mqtt-forwarder" "Stopping ChirpStack MQTT forwarder service..."
+    logger -t "chirpstack_mqtt_forwarder" "Stopping ChirpStack MQTT forwarder service..."
 }
 EOF
 

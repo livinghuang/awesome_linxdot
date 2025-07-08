@@ -1,12 +1,12 @@
 #!/bin/sh
 
 # Linxdot OpenSource:
-# Purpose: Stop and remove the chirpstack-mqtt-forwarder service.
+# Purpose: Stop and remove the chirpstack_mqtt_forwarder service.
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-service_file="/etc/init.d/linxdot-chirpstack-mqtt-forwarder"
-process_name="chirpstack-mqtt-forwarder"
+service_file="/etc/init.d/linxdot_chirpstack_mqtt_forwarder"
+process_name="chirpstack_mqtt_forwarder"
 
 echo "Step 1: Attempting to stop via init.d service..."
 logger -t "$process_name" "Attempting to stop service."
