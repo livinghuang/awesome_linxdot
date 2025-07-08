@@ -74,18 +74,18 @@ echo "[INFO] 安裝本地 ChirpStack Server..."
   exit 1
 }
 
-# # Default role is as 'gateway-mesh-border'
-# # ChirpStack Concentratord -> ChirpStack Gateway Mesh Border -> ChirpStack MQTT Forwarder
+# Default role is as 'gateway-mesh-border'
+# ChirpStack Concentratord -> ChirpStack Gateway Mesh Border -> ChirpStack MQTT Forwarder
 
-# # Step 1: Install ChirpStack Concentratord
-# echo "[INFO] 安裝 ChirpStack Concentratord..."
-# /opt/awesome_linxdot/awesome_software/chirpstack_concentratord/install-chirpstack_concentratord.sh || {
-#   echo "[ERROR] 安裝 ChirpStack Concentratord 失敗" >&2
-#   exit 1
-# }
+# Step 1: Install ChirpStack Concentratord
+echo "[INFO] 安裝 ChirpStack Concentratord..."
+/opt/awesome_linxdot/awesome_software/chirpstack_concentratord/install_chirpstack_concentratord.sh || {
+  echo "[ERROR] 安裝 ChirpStack Concentratord 失敗" >&2
+  exit 1
+}
 # # Step 2: Install ChirpStack Gateway Mesh Border
 # echo "[INFO] 安裝 ChirpStack Gateway Mesh Border..."
-# /opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh_border/install-chirpstack_gateway_mesh_border.sh || {
+# /opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh_border/install_chirpstack_gateway_mesh_border.sh || {
 #   echo "[ERROR] 安裝 ChirpStack Gateway Mesh Border 失敗" >&2
 #   exit 1
 # }

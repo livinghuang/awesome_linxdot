@@ -3,7 +3,7 @@
 # Linxdot OpenSource:
 # Purpose: Call the lora_pkt_fwd runtime in the background.
 # Author: Living Huang
-# Date: 2025-02-23
+# Date: 2025-07-08
 # Updated: Added PID check and process termination before start.
 
 # Default region handling
@@ -12,7 +12,7 @@ echo "Using region: $region"
 logger -t "chirpstack_concentratord" "Starting with region: $region"
 
 # Directories and executable
-base_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack_concentratord_sx1302"
+base_dir="/opt/awesome_linxdot/awesome_software/chirpstack_concentratord/chirpstack_concentratord_binary"
 executable="$base_dir/chirpstack_concentratord_sx1302"
 
 # Config files
