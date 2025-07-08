@@ -67,12 +67,12 @@ if [ -f /etc/init.d/watchcat ]; then
 fi
 
 
-# #install local ChirpStack Server
-# echo "[INFO] 安裝本地 ChirpStack Server..."
-# /opt/awesome_linxdot/awesome_software/chirpstack_server/install-chirpstack_server.sh || {
-#   echo "[ERROR] 安裝本地 ChirpStack Server 失敗" >&2
-#   exit 1
-# }
+#install local ChirpStack Server
+echo "[INFO] 安裝本地 ChirpStack Server..."
+/opt/awesome_linxdot/awesome_software/chirpstack_server/install_chirpstack_server.sh || {
+  echo "[ERROR] 安裝本地 ChirpStack Server 失敗" >&2
+  exit 1
+}
 
 # # Default role is as 'gateway-mesh-border'
 # # ChirpStack Concentratord -> ChirpStack Gateway Mesh Border -> ChirpStack MQTT Forwarder

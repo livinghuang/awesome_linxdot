@@ -6,8 +6,8 @@
 # Date: 2025-02-23
 
 # Variables
-system_dir="/opt/awesome_linxdot/chirpstack-software"
-service_file="/etc/init.d/linxdot-chirpstack-service"
+system_dir="/opt/awesome_linxdot/chirpstack_software"
+service_file="/etc/init.d/linxdot_chirpstack_service"
 DOCKER_CONFIG="/etc/docker/daemon.json"
 
 echo "Step 1: Checking dependencies..."
@@ -78,7 +78,7 @@ START=99
 
 start() {
     logger -t "chirpstack" "Starting ChirpStack service..."
-    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker || {
+    cd /opt/awesome_linxdot/awesome_software/chirpstack_server/chirpstack_docker || {
         logger -t "chirpstack" "Failed to change directory."
         exit 1
     }
@@ -92,7 +92,7 @@ start() {
 
 stop() {
     logger -t "chirpstack" "Stopping ChirpStack service..."
-    cd /opt/awesome_linxdot/chirpstack-software/chirpstack-docker && docker-compose down
+    cd /opt/awesome_linxdot/awesome_software/chirpstack_server/chirpstack_docker && docker-compose down
 }
 EOF
 
