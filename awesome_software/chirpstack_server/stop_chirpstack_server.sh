@@ -6,7 +6,7 @@
 # Date: 2025-07-08
 
 # Variables
-system_dir="/opt/awesome_linxdot/chirpstack_software/chirpstack_server/chirpstack_docker"
+system_dir="/opt/awesome_linxdot/awesome_software/chirpstack_server/chirpstack_docker"
 init_script="/etc/init.d/linxdot_chirpstack_service"
 
 echo "Step 1: Stopping ChirpStack service using docker-compose..."
