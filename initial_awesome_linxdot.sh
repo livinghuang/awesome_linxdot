@@ -2,6 +2,10 @@
 
 # initial awesome linxdot script
 
+set -e
+set -u
+
+
 #install Cron Sync
 echo "[INFO] 設定 Cron 任務同步..."
 /opt/awesome_linxdot/awesome_software/cron/cron_sync.sh || {
@@ -23,33 +27,45 @@ echo "[INFO] 安裝 Reverse SSH 服務..."
   exit 1
 }
 
-#stop and disable lora_pkt_fwd
-# This is necessary to avoid conflicts with the new ChirpStack Concentrator
-echo "[INFO] 停用 lora_pkt_fwd..."
-/etc/init.d/linxdot-lora-pkt-fwd stop
-/etc/init.d/linxdot-lora-pkt-fwd disable
+# === 停用 lora_pkt_fwd（若存在） ===
+if [ -f /etc/init.d/linxdot-lora-pkt-fwd ]; then
+  echo "[INFO] 停用 lora_pkt_fwd..."
+  /etc/init.d/linxdot-lora-pkt-fwd stop
+  /etc/init.d/linxdot-lora-pkt-fwd disable
+  rm /etc/init.d/linxdot-lora-pkt-fwd
+fi
 
-#stop and disable old linxdot ChirpStack Service
-# This is necessary to avoid conflicts with the new ChirpStack Service
-echo "[INFO] 停用舊的 Linxdot ChirpStack 服務..."
-/etc/init.d/linxdot-chripstack-service stop
-/etc/init.d/linxdot-chripstack-service disable
-rm /etc/init.d/linxdot-chripstack-service
+# === 停用舊的 ChirpStack Service ===
+if [ -f /etc/init.d/linxdot-chripstack-service ]; then
+  echo "[INFO] 停用舊的 Linxdot ChirpStack 服務..."
+  /etc/init.d/linxdot-chripstack-service stop
+  /etc/init.d/linxdot-chripstack-service disable
+  rm /etc/init.d/linxdot-chripstack-service
+fi
 
-#stop and disable old linxdot check service(it is for miner)
-echo "[INFO] 停用舊的 Linxdot Check 服務..."
-/etc/init.d/linxdot_check stop
-/etc/init.d/linxdot_check disable
-rm /etc/init.d/linxdot_check
+# === 停用 linxdot_check（若存在） ===
+if [ -f /etc/init.d/linxdot_check ]; then
+  echo "[INFO] 停用舊的 Linxdot Check 服務..."
+  /etc/init.d/linxdot_check stop
+  /etc/init.d/linxdot_check disable
+  rm /etc/init.d/linxdot_check
+fi
 
-#stop and disable old linxdot setup and watchcat service
-echo "[INFO] 停用舊的 Linxdot Setup 和 Watchcat 服務..."
-/etc/init.d/linxdot_setup stop
-/etc/init.d/linxdot_setup disable
-rm /etc/init.d/linxdot_setup 
-/etc/init.d/watchcat stop
-/etc/init.d/watchcat disable
-rm /etc/init.d/watchcat
+# === 停用 linxdot_setup 和 watchcat（若存在） ===
+if [ -f /etc/init.d/linxdot_setup ]; then
+  echo "[INFO] 停用舊的 Linxdot Setup 服務..."
+  /etc/init.d/linxdot_setup stop
+  /etc/init.d/linxdot_setup disable
+  rm /etc/init.d/linxdot_setup
+fi
+
+if [ -f /etc/init.d/watchcat ]; then
+  echo "[INFO] 停用 Watchcat..."
+  /etc/init.d/watchcat stop
+  /etc/init.d/watchcat disable
+  rm /etc/init.d/watchcat
+fi
+
 
 # #install local ChirpStack Server
 # echo "[INFO] 安裝本地 ChirpStack Server..."
