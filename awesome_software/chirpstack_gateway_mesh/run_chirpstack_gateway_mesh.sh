@@ -24,8 +24,7 @@ echo "Using role: $role | Using region: $region"
 logger -t "chirpstack_gateway_mesh_as_$role" "Service starting with role: $role and region: $region"
 
 # --- Directories and Files ---
-
-base_dir="/opt/awesome_linxdot/chirpstack_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary"
+base_dir="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary"
 executable="$base_dir/chirpstack_gateway_mesh_border_beacon" # chirpstack_gateway_mesh_border_beacon is revised version to send beacon from border to relay
 config_dir="$base_dir/config"
 channels_config="$config_dir/channels_${region}.toml"
