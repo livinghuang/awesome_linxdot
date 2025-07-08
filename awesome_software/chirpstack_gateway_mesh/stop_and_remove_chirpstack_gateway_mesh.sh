@@ -1,14 +1,14 @@
 #!/bin/sh
 
 # Linxdot OpenSource:
-# Purpose: Uninstall the chirpstack-gateway-mesh service, kill related processes, and clean up.
+# Purpose: Uninstall the chirpstack_gateway_mesh service, kill related processes, and clean up.
 # Author: Living Huang
-# Date: 2025-02-23
+# Date: 2025-07-08
 # Updated: Unified into a single service removal with complete process and file cleanup.
 
 
-process_name="chirpstack-gateway-mesh"
-service_name="linxdot-chirpstack-gateway-mesh"
+process_name="chirpstack_gateway_mesh"
+service_name="linxdot_chirpstack_gateway_mesh"
 service_file="/etc/init.d/${service_name}"
 pid_file="/var/run/${process_name}.pid"
 lock_file="/tmp/${process_name}.lock"
@@ -69,6 +69,6 @@ fi
 echo "Step 4: Removing cron job for mesh relay time sync..."
 sed -i '/run_mesh_time_sync.sh/d' /etc/crontabs/root
 /etc/init.d/cron restart
-logger -t "chirpstack-gateway-mesh" "Cron job for mesh relay time sync removed."
+logger -t "chirpstack_gateway_mesh" "Cron job for mesh relay time sync removed."
 
 echo "Step 5: Uninstallation completed. All related services and processes have been removed."

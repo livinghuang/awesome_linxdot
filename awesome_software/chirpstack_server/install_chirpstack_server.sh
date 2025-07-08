@@ -3,7 +3,7 @@
 # Linxdot OpenSource:
 # Main purpose: Install ChirpStack service on LD1001/LD1002 hotspot.
 # Author: Living Huang
-# Date: 2025-02-23
+# Date: 2025-07-08
 
 # Variables
 system_dir="/opt/awesome_linxdot/chirpstack_software"

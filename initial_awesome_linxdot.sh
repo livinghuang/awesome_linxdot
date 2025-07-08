@@ -83,12 +83,12 @@ echo "[INFO] 安裝 ChirpStack Concentratord..."
   echo "[ERROR] 安裝 ChirpStack Concentratord 失敗" >&2
   exit 1
 }
-# # Step 2: Install ChirpStack Gateway Mesh Border
-# echo "[INFO] 安裝 ChirpStack Gateway Mesh Border..."
-# /opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh_border/install_chirpstack_gateway_mesh_border.sh || {
-#   echo "[ERROR] 安裝 ChirpStack Gateway Mesh Border 失敗" >&2
-#   exit 1
-# }
+# Step 2: Install ChirpStack Gateway Mesh Border
+echo "[INFO] 安裝 ChirpStack Gateway Mesh Border..."
+/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/install_chirpstack_gateway_mesh.sh border as923|| {
+  echo "[ERROR] 安裝 ChirpStack Gateway Mesh Border 失敗" >&2
+  exit 1
+}
 # # Step 3: Install ChirpStack MQTT Forwarder
 # echo "[INFO] 安裝 ChirpStack MQTT Forwarder..."
 # /opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder/install

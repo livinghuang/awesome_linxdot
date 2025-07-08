@@ -3,11 +3,11 @@
 # Linxdot OpenSource:
 # Purpose: Stop the ChirpStack service using docker-compose and remove init.d service.
 # Author: Living Huang
-# Date: 2025-02-23
+# Date: 2025-07-08
 
 # Variables
-system_dir="/opt/awesome_linxdot/chirpstack-software/chirpstack-docker"
-init_script="/etc/init.d/linxdot-chirpstack-service"
+system_dir="/opt/awesome_linxdot/chirpstack_software/chirpstack_server/chirpstack_docker"
+init_script="/etc/init.d/linxdot_chirpstack_service"
 
 echo "Step 1: Stopping ChirpStack service using docker-compose..."
 
