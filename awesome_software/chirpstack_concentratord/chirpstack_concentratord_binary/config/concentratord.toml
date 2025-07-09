@@ -1,57 +1,64 @@
-# Concentratord configuration.
+# ========================
+# ChirpStack Concentratord 設定檔（適用 SX1302）
+# 檔案位置：concentratord.toml
+# ========================
+
+# ────────────────────────
+# Concentratord 主設定
+# ────────────────────────
 [concentratord]
 
-# Log level.
-#
-# Valid options are:
-#   * TRACE
-#   * DEBUG
-#   * INFO
-#   * WARN
-#   * ERROR
-#   * OFF
-log_level="INFO"
+# 日誌等級（可選: TRACE, DEBUG, INFO, WARN, ERROR, OFF）
+log_level = "INFO"
 
-# Log to syslog.
-#
-# When set to true, log messages are being written to syslog instead of stdout.
-log_to_syslog=false
+# 是否將日誌寫入 syslog（建議設為 true，方便 logread 查看）
+log_to_syslog = true
 
-# Statistics interval.
-stats_interval="30s"
+# 每隔多久送出一次統計資料（rx/tx 數據）
+stats_interval = "30s"
 
-# Configuration for the (ZeroMQ based) API.
+# ────────────────────────
+# ZeroMQ IPC 接口設定
+# 提供與 chirpstack-gateway-bridge 通訊的 IPC 通道
+# ────────────────────────
 [concentratord.api]
 
-  # Event PUB socket bind.
-  event_bind="ipc:///tmp/concentratord_event"
+# 上行事件推播（PUB）socket
+event_bind = "ipc:///tmp/concentratord_event"
 
-  # Command REP socket bind.
-  command_bind="ipc:///tmp/concentratord_command"
+# 下行命令回應（REP）socket
+command_bind = "ipc:///tmp/concentratord_command"
 
-# LoRa gateway configuration.
+# ────────────────────────
+# JSON 統計檔案輸出設定
+# 可用於非 MQTT 環境，或本地監控
+# ────────────────────────
+[concentratord.stats]
+
+# stats.json 儲存位置（會自動建立）
+json_file = "/var/run/chirpstack-concentratord-as923/stats.json"
+
+# ────────────────────────
+# LoRa Gateway 設定
+# ────────────────────────
 [gateway]
 
-  # Antenna gain (dBi).
-  antenna_gain=0
-  
-  # Public LoRaWAN network.
-  lorawan_public=true
-  
-  # Region.
-  #
-  # The region of the gateway. Options:
-  #  EU868, US915, CN779, EU433, AU915, CN470, AS923, AS923_2, AS923_3, AS923_4,
-  #  KR923, IN865, RU864
-  #
-  # Not not all the gateway models implement all regions.
-  region="AS923"
-  
-  # Gateway vendor / model.
-  #
-  # This configures various vendor and model specific settings like the min / max
-  # frequency, TX gain table.
-  model="linxdot_ld1002"
-  
-  # Gateway vendor / model flags.
-  model_flags=[]
+# 天線增益（單位 dBi），影響 EIRP 計算
+antenna_gain = 0
+
+# 是否為 Public LoRaWAN（設為 true 即可）
+lorawan_public = true
+
+# 使用頻段區域，選項包含：
+# EU868, US915, AS923, CN470, AU915, KR923, IN865, ...
+region = "AS923"
+
+# 所使用的 gateway 硬體型號（對應官方支援）
+# 這個名稱會對應內部 GPIO/SPI 設定
+model = "linxdot_ld1002"
+
+# 額外旗標（通常不用設）
+model_flags = []
+
+# （選填）手動指定 Gateway ID，覆蓋預設從 SX1302 取得的 EUI
+gateway_id = "b827ebfffe765432"
