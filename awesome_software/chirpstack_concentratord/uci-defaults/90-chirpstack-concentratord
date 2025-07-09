@@ -5,8 +5,8 @@ mkdir -p /usr/lib/lua/luci/controller
 mkdir -p /usr/lib/lua/luci/view/chirpstack
 
 # 複製 LuCI 檔案
-cp /opt/awesome_linxdot/chirpstack_concentratord/luci/controller/chirpstack.lua /usr/lib/lua/luci/controller/
-cp /opt/awesome_linxdot/chirpstack_concentratord/luci/view/chirpstack/status.htm /usr/lib/lua/luci/view/chirpstack/
+cp /opt/awesome_linxdot/awesome_software/chirpstack_concentratord/luci/controller/chirpstack.lua /usr/lib/lua/luci/controller/
+cp /opt/awesome_linxdot/awesome_software/chirpstack_concentratord/luci/view/chirpstack/status.htm /usr/lib/lua/luci/view/chirpstack/
 
 # 清除快取
 rm -rf /tmp/luci-*
