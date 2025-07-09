@@ -28,3 +28,4 @@ start_service() {
 stop_service() {
     logger -t chirpstack_concentratord "Stopping concentratord..."
 }
+

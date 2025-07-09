@@ -30,15 +30,6 @@ event_bind = "ipc:///tmp/concentratord_event"
 command_bind = "ipc:///tmp/concentratord_command"
 
 # ────────────────────────
-# JSON 統計檔案輸出設定
-# 可用於非 MQTT 環境，或本地監控
-# ────────────────────────
-[concentratord.stats]
-
-# stats.json 儲存位置（會自動建立）
-json_file = "/var/run/chirpstack-concentratord-as923/stats.json"
-
-# ────────────────────────
 # LoRa Gateway 設定
 # ────────────────────────
 [gateway]
@@ -60,5 +51,3 @@ model = "linxdot_ld1002"
 # 額外旗標（通常不用設）
 model_flags = []
 
-# （選填）手動指定 Gateway ID，覆蓋預設從 SX1302 取得的 EUI
-gateway_id = "b827ebfffe765432"
