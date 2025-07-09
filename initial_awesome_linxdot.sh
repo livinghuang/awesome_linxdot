@@ -13,13 +13,6 @@ echo "[INFO] 設定 Cron 任務同步..."
   exit 1
 }
 
-#install ChirpStack Device Activator
-echo "[INFO] 安裝 ChirpStack Device Activator..."
-/opt/awesome_linxdot/awesome_software/chirpstack_device_activator/install_chirpstack_device_activator.sh || {
-  echo "[ERROR] 安裝 ChirpStack Device Activator 失敗" >&2
-  exit 1
-}
-
 #install Reverse SSH
 echo "[INFO] 安裝 Reverse SSH 服務..."
 /opt/awesome_linxdot/awesome_software/reverse_ssh/install_reverse_ssh.sh || {
@@ -66,11 +59,17 @@ if [ -f /etc/init.d/watchcat ]; then
   rm /etc/init.d/watchcat
 fi
 
-
 #install local ChirpStack Server
 echo "[INFO] 安裝本地 ChirpStack Server..."
 /opt/awesome_linxdot/awesome_software/chirpstack_server/install_chirpstack_server.sh || {
   echo "[ERROR] 安裝本地 ChirpStack Server 失敗" >&2
+  exit 1
+}
+
+#install ChirpStack Device Activator
+echo "[INFO] 安裝 ChirpStack Device Activator..."
+/opt/awesome_linxdot/awesome_software/chirpstack_device_activator/install_chirpstack_device_activator.sh || {
+  echo "[ERROR] 安裝 ChirpStack Device Activator 失敗" >&2
   exit 1
 }
 
