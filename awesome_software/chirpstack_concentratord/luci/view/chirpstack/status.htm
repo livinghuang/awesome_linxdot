@@ -1,4 +1,11 @@
 <%+header%>
+
   <h2>ChirpStack Concentratord 狀態</h2>
+
+  <b>Service Status:</b>
   <pre><%= luci.util.exec("/etc/init.d/linxdot_chirpstack_concentratord status") %></pre>
+
+  <b>Gateway ID:</b>
+  <pre><%= require("luci.controller.chirpstack").get_gateway_id() %></pre>
+
   <%+footer%>
