@@ -1,26 +1,28 @@
 <%+header%>
 
-  <h2>ChirpStack Concentratord 狀態</h2>
+  <h2>LoRaWAN Gateway 狀態</h2>
 
   <b>Service Status:</b>
   <pre><%= luci.util.exec("/etc/init.d/linxdot_chirpstack_concentratord status") %></pre>
 
-  <b>Gateway ID:</b>
+  <b>目前 Gateway ID:</b>
   <pre>
 <%
-  local gwid = require("luci.controller.chirpstack").get_gateway_id()
+  local gwid = require("luci.controller.lorawan").get_gateway_id()
   if gwid then
     write(gwid)
   else
-    write("N/A")
+    write("尚未取得 Gateway ID（可能尚未產生 /tmp/gateway_id）")
   end
 %>
 </pre>
 
+  <hr />
+
   <form method="post"
-        action="<%= luci.dispatcher.build_url('admin', 'lorawan', 'refresh_gateway_id') %>">
+        action="<%=luci.dispatcher.build_url('admin', 'services', 'lorawan', 'refresh_gateway_id')%>">
     <input type="submit"
-           class="btn cbi-button cbi-input-reload"
+           class="cbi-button cbi-input-reload"
            value="重新擷取 Gateway ID" />
   </form>
 

@@ -1,8 +1,14 @@
-module("luci.controller.chirpstack", package.seeall)
+module("luci.controller.lorawan", package.seeall)
 
 function index()
-    entry({"admin", "lorawan"}, template("chirpstack/status"), _("LoRaWAN"), 10).leaf = true
-    entry({"admin", "lorawan", "refresh_gateway_id"}, call("action_refresh_gateway_id"), nil).leaf = true
+    entry({"admin", "services", "lorawan"}, template("lorawan/status"), _("LoRaWAN Gateway"), 10).leaf = true
+    entry({"admin", "services", "lorawan", "refresh_gateway_id"}, call("action_refresh_gateway_id"), nil).leaf = true
+end
+
+function action_refresh_gateway_id()
+    local cmd = "/opt/awesome_linxdot/awesome_software/chirpstack_concentratord/get_gateway_id.sh"
+    os.execute("sh " .. cmd .. " &")  -- 背景執行，不阻塞
+    luci.http.redirect(luci.dispatcher.build_url("admin", "services", "lorawan"))
 end
 
 function get_gateway_id()
@@ -12,11 +18,5 @@ function get_gateway_id()
         file:close()
         return id
     end
+    return nil
 end
-
-function action_refresh_gateway_id()
-    local cmd = "sh /opt/awesome_linxdot/awesome_software/chirpstack_concentratord/get_gateway_id.sh"
-    os.execute(cmd)
-    luci.http.redirect(luci.dispatcher.build_url("admin", "lorawan"))
-end
-
