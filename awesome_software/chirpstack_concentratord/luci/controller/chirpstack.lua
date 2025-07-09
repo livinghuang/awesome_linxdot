@@ -1,7 +1,7 @@
 module("luci.controller.chirpstack", package.seeall)
 
 function index()
-    entry({"admin", "services", "chirpstack"}, template("chirpstack/status"), _("ChirpStack Concentratord"), 10)
+    entry({"admin", "status", "chirpstack"}, template("chirpstack/status"), _("ChirpStack Concentratord"), 10)
 end
 
 function get_gateway_id()
