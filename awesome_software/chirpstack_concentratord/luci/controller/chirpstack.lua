@@ -15,7 +15,7 @@ function get_gateway_id()
 end
 
 function action_refresh_gateway_id()
-    local cmd = "/opt/awesome_linxdot/awesome_software/chirpstack_concentratord/get_gateway_id.sh"
+    local cmd = "sh /opt/awesome_linxdot/awesome_software/chirpstack_concentratord/get_gateway_id.sh"
     os.execute(cmd)
     luci.http.redirect(luci.dispatcher.build_url("admin", "lorawan"))
 end
