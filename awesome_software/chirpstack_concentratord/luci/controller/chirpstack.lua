@@ -1,4 +1,4 @@
-module("luci.controller.lorawan", package.seeall)
+module("luci.controller.chirpstack", package.seeall)
 
 function index()
     entry({"admin", "services", "lorawan"}, template("lorawan/status"), _("LoRaWAN Gateway"), 10).leaf = true
