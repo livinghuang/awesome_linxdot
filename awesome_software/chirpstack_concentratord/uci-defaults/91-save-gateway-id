@@ -1,5 +1,16 @@
 #!/bin/sh
+
 (
+    # 立即執行一次（背景）
     /opt/awesome_linxdot/awesome_software/chirpstack_concentratord/get_gateway_id.sh &
+
+    # 確保 rc.local 存在並正確寫入
+    [ -f /etc/rc.local ] || echo -e "#!/bin/sh\nexit 0" > /etc/rc.local
+    chmod +x /etc/rc.local
+
+    # 若尚未加入則插入指令
+    grep -q get_gateway_id.sh /etc/rc.local || \
+        sed -i '/^exit 0/i /opt/awesome_linxdot/awesome_software/chirpstack_concentratord/get_gateway_id.sh &' /etc/rc.local
 ) &
+
 exit 0
