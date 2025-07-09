@@ -6,6 +6,25 @@
   <pre><%= luci.util.exec("/etc/init.d/linxdot_chirpstack_concentratord status") %></pre>
 
   <b>Gateway ID:</b>
-  <pre><%= require("luci.controller.chirpstack").get_gateway_id() %></pre>
+  <pre>
+<%
+  local gwid = require("luci.controller.chirpstack").get_gateway_id()
+  if gwid then
+    write(gwid)
+  else
+    write("N/A")
+  end
+%>
+</pre>
+
+  <form method="post"
+        action="<%=luci.dispatcher.build_url("
+        admin", "lorawan"
+        , "refresh_gateway_id"
+        )%>">
+    <input type="submit"
+           class="btn cbi-button cbi-input-reload"
+           value="重新擷取 Gateway ID" />
+  </form>
 
   <%+footer%>
