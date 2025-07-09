@@ -1,0 +1,30 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+USE_PROCD=1
+
+BIN_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_concentratord/chirpstack_concentratord_binary/chirpstack_concentratord_sx1302"
+CFG_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_concentratord/chirpstack_concentratord_binary/config"
+
+REGION="as923"
+
+start_service() {
+    logger -t chirpstack_concentratord "Starting concentratord for region: $REGION"
+
+    procd_open_instance
+    procd_set_param command "$BIN_PATH" \
+        -c "$CFG_PATH/concentratord.toml" \
+        -c "$CFG_PATH/channels_$REGION.toml" \
+        -c "$CFG_PATH/region_$REGION.toml"
+
+    procd_set_param respawn 3600 5 0
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_close_instance
+
+    logger -t chirpstack_concentratord "Service launched"
+}
+
+stop_service() {
+    logger -t chirpstack_concentratord "Stopping concentratord..."
+}

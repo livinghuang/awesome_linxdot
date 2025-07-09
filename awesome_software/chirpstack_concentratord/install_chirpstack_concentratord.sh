@@ -1,93 +1,31 @@
 #!/bin/sh
 
-# Linxdot OpenSource:
-# Purpose: Install and start chirpstack_concentratord service, then copy LuCI files.
-# Author: Living Huang
-# Date: 2025-02-23
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INITD_SRC="$SCRIPT_DIR/linxdot_chirpstack_concentratord.initd"
+INITD_DEST="/etc/init.d/linxdot_chirpstack_concentratord"
+UCI_SCRIPT="$SCRIPT_DIR/uci-defaults/90-chirpstack-concentratord"
 
-region="as923"
-service_file="/etc/init.d/linxdot_chirpstack_concentratord"
-run_script="/opt/awesome_linxdot/chirpstack_concentratord/run_chirpstack_concentratord.sh"
-luci_source_dir="/opt/awesome_linxdot/luci"
-luci_controller_dest="/usr/lib/lua/luci/controller"
-luci_view_dest="/usr/lib/lua/luci/view"
-monitor_gateway_id="/opt/awesome_linxdot/awesome_software/monitor_gateway_id_binary/monitor_gateway_id"
+echo "Step 1: Installing init.d service..."
 
-
-echo "Step 1: Checking if the ChirpStack Concentratord service is installed..."
-
-# Check if the service file exists
-if [ ! -f "$service_file" ]; then
-    echo "-------- Service not found. Creating service file..."
-
-    cat << EOF > "$service_file"
-#!/bin/sh /etc/rc.common
-
-START=99
-USE_PROCD=1
-
-start_service() {
-    logger -t "chirpstack_concentratord" "Starting service with region: ${region}..."
-
-    procd_open_instance
-    procd_set_param command "${run_script}" "${region}"
-    procd_set_param respawn 3600 5 0  # Respawn: max 5 retries with 1-hour interval
-    procd_set_param stdout 1          # Redirect stdout to syslog
-    procd_set_param stderr 1          # Redirect stderr to syslog
-    procd_close_instance
-
-    logger -t "chirpstack_concentratord" "Service started successfully!"
-}
-
-stop_service() {
-    logger -t "chirpstack_concentratord" "Stopping service..."
-}
-EOF
-
-    chmod +x "$service_file"
-    echo "Service file created and made executable."
-
-    "$service_file" enable
+if [ ! -f "$INITD_SRC" ]; then
+    echo "Error: $INITD_SRC not found!"
+    exit 1
 fi
 
-# Start the service
-"$service_file" start
+cp "$INITD_SRC" "$INITD_DEST"
+chmod +x "$INITD_DEST"
+"$INITD_DEST" enable
+"$INITD_DEST" start
+echo "Service installed and started."
 
-echo "Step 2: Copying LuCI files..."
+echo "Step 2: Installing LuCI files..."
 
-# Ensure target directories exist
-mkdir -p "$luci_controller_dest"
-mkdir -p "$luci_view_dest"
-
-# Copy LuCI controller files (.lua)
-if [ -d "$luci_source_dir/controller" ]; then
-    cp -r "$luci_source_dir/controller/"* "$luci_controller_dest/"
-    echo "Copied LuCI controller files to $luci_controller_dest"
+if [ -f "$UCI_SCRIPT" ]; then
+    chmod +x "$UCI_SCRIPT"
+    sh "$UCI_SCRIPT"
+    echo "LuCI files installed."
+else
+    echo "Warning: LuCI uci-defaults script not found: $UCI_SCRIPT"
 fi
 
-# Copy LuCI view files (.htm)
-if [ -d "$luci_source_dir/view" ]; then
-    cp -r "$luci_source_dir/view/"* "$luci_view_dest/"
-    echo "Copied LuCI view files to $luci_view_dest"
-fi
-
-# Set file permissions
-chmod -R 644 "$luci_controller_dest"/*
-chmod -R 644 "$luci_view_dest"/*
-
-echo "Step 3: Restarting LuCI services..."
-
-# Clear LuCI cache and restart services
-rm -rf /tmp/luci-*
-/etc/init.d/rpcd restart
-/etc/init.d/nginx restart  # If using nginx, otherwise use /etc/init.d/uhttpd restart
-
-echo "Step 4: Executing monitor_gateway_id program..."
-
-# Execute monitor_gateway_id program
-if [ -f "$monitor_gateway_id" ]; then
-    "$monitor_gateway_id" &
-    echo "monitor_gateway_id program started."
-fi
-
-echo "Step 5: LuCI page is ready! You can find it under Status → ChirpStack"
+echo "Installation complete. Please open LuCI → 狀態 → ChirpStack 查看狀態。"
