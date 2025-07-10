@@ -1,4 +1,4 @@
-[gateway]
+# [gateway]
 
 # Uplink dwell time setting (important for AS923 region)
 # dwell_time_setting = "NoLimit"
@@ -26,4 +26,4 @@ bandwidth = 125000
 spreading_factor = 9
 
 # TX power.
-tx_power = 22
+tx_power = 14
