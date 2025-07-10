@@ -15,10 +15,10 @@ server = "tcp://13.55.159.24:1883"
 
 # MQTT topic prefix
 # 實際 topics 將會是：
-#   cloud/gateway/<GatewayID>/event/<EventType>
-#   cloud/gateway/<GatewayID>/state/<StateType>
-#   cloud/gateway/<GatewayID>/command/<Command>
-topic_prefix = "cloud"
+#   as923/gateway/<GatewayID>/event/<EventType>
+#   as923/gateway/<GatewayID>/state/<StateType>
+#   as923/gateway/<GatewayID>/command/<Command>
+topic_prefix = "as923"
 
 # 是否使用 JSON 格式傳輸資料（建議保持 false，除非為 debug 用）
 json = false
