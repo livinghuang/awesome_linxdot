@@ -1,7 +1,7 @@
 [gateway]
 
 # Uplink dwell time setting (important for AS923 region)
-dwell_time_setting = "NoLimit"
+# dwell_time_setting = "NoLimit"
 
 [gateway.beacon]
 # Compulsory RFU size.
