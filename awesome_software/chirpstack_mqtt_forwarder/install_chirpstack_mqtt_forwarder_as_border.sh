@@ -17,7 +17,7 @@ base_dir="/opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder"
 binary_dir="$base_dir/chirpstack_mqtt_forwarder_binary"
 bin_file="$binary_dir/chirpstack_mqtt_forwarder"
 config_file="$binary_dir/chirpstack_mqtt_forwarder_as_gateway_mesh_border.toml"
-initd_template="$binary_dir/chirpstack_mqtt_forwarder_as_border.initd"
+initd_template="$base_dir/chirpstack_mqtt_forwarder_as_border.initd"
 initd_target="/etc/init.d/linxdot_chirpstack_mqtt_forwarder_as_border"
 
 # ───────────────────────────────────────────────
