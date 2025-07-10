@@ -7,15 +7,27 @@
 # Updated: 2025-07-10
 # ───────────────────────────────────────────────
 
+set -e  # 當有錯誤發生時中止執行
+set -u  # 使用未定義變數會導致錯誤
 echo "【Linxdot Mesh Relay 安裝開始】"
 
 SERVICE_NAME="linxdot_chirpstack_gateway_mesh_relay"
 INITD_PATH="/etc/init.d/$SERVICE_NAME"
 
+# 如果已經存在同名 init.d，就先停用舊服務
+if [ -f "$INITD_PATH" ]; then
+    echo "[INFO] 偵測到已有 $SERVICE_NAME，重新安裝..."
+    $INITD_PATH stop || true
+    $INITD_PATH disable || true
+    rm -f "$INITD_PATH"
+fi
+
 # 主要程式與設定檔路徑
-BINARY_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary/chirpstack_gateway_mesh_relay"
-CONFIG_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary/config/chirpstack_gateway_mesh_as_relay.toml"
-INITD_TEMPLATE="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary/chirpstack_gateway_mesh_relay.initd"
+SCRIPT_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh"
+BINARY_PATH="$SCRIPT_PATH/chirpstack_gateway_mesh_binary/chirpstack_gateway_mesh_relay"
+INITD_TEMPLATE="$SCRIPT_PATH/chirpstack_gateway_mesh_relay.initd"
+CONFIG_PATH="$SCRIPT_PATH/chirpstack_gateway_mesh_binary/config/chirpstack_gateway_mesh_as_relay.toml"
+
 
 # 【1】檢查檔案是否存在
 if [ ! -x "$BINARY_PATH" ]; then
