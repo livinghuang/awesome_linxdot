@@ -11,10 +11,11 @@
 echo "【Linxdot MQTT Forwarder 安裝開始】"
 
 # 設定資料路徑
-binary_dir="/opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder/chirpstack_mqtt_forwarder_binary"
+base_dir="/opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder"
+binary_dir="$base_dir/chirpstack_mqtt_forwarder_binary"
 bin_file="$binary_dir/chirpstack_mqtt_forwarder"
 config_file="$binary_dir/chirpstack_mqtt_forwarder.toml"
-initd_template="$binary_dir/chirpstack_mqtt_forwarder.initd"
+initd_template="$base_dir/chirpstack_mqtt_forwarder.initd"
 initd_target="/etc/init.d/linxdot_chirpstack_mqtt_forwarder"
 
 # 【1】確認 binary 與 config 是否存在

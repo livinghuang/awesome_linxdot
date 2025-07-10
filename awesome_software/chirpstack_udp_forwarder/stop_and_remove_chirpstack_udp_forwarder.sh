@@ -14,7 +14,6 @@ echo "【2】移除 init.d 服務檔案..."
 rm -f /etc/init.d/linxdot_chirpstack_udp_forwarder
 
 echo "【3】移除執行檔與設定..."
-rm -rf /opt/awesome_linxdot/chirpstack_software/chirpstack_udp_forwarder_sx1302
-rm -f /opt/awesome_linxdot/run_chirpstack_udp_forwarder.sh
+rm -rf /opt/awesome_linxdot/awesome_software/chirpstack_udp_forwarder_sx1302
 
 echo "✅ UDP Forwarder 移除完成。"
