@@ -1,76 +1,43 @@
 #!/bin/sh
 
-# Linxdot OpenSource:
-# Purpose: Install and start the chirpstack_mqtt_forwarder as a background service.
+# ───────────────────────────────────────────────
+# Linxdot MQTT Forwarder Installer
+# 安裝 chirpstack_mqtt_forwarder 為 OpenWrt 背景服務
+# 適用機種：Linxdot + SX1302 + OpenWrt
 # Author: Living Huang
-# Date: 2025-07-08
-# Updated: Accepts simplified arguments (border or relay) and maps them to config files.
+# Updated: 2025-07-10
+# ───────────────────────────────────────────────
 
-# --- Parameters and Variables ---
+echo "【Linxdot MQTT Forwarder 安裝開始】"
 
-role="${1:-default}"  # Default role is 'default' if no argument is provided
-service_file="/etc/init.d/linxdot_chirpstack_mqtt_forwarder"
-script_to_run="/opt/awesome_linxdot/run_chirpstack_mqtt_forwarder.sh"
+# 設定資料路徑
+binary_dir="/opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder/chirpstack_mqtt_forwarder_binary"
+bin_file="$binary_dir/chirpstack_mqtt_forwarder"
+config_file="$binary_dir/chirpstack_mqtt_forwarder.toml"
+initd_template="$binary_dir/chirpstack_mqtt_forwarder.initd"
+initd_target="/etc/init.d/linxdot_chirpstack_mqtt_forwarder"
 
-# Map roles to configuration files
-case "$role" in
-  border)
-    config_file="chirpstack_mqtt_forwarder_as_gateway_mesh_border.toml"
-    ;;
-  multi1)
-    config_file="chirpstack_mqtt_forwarder_multi1.toml"
-    ;;
-  multi2)
-    config_file="chirpstack_mqtt_forwarder_multi2.toml"
-    ;;
-  *)
-    config_file="chirpstack_mqtt_forwarder.toml"
-    ;;
-esac
-
-echo "Step 1: Checking if the ChirpStack MQTT forwarder service is installed..."
-echo "Using configuration file: $config_file"
-
-# --- Create Service File if Not Exists ---
-
-if [ ! -f "$service_file" ]; then
-    echo "Service not found. Creating service file..."
-
-    cat << EOF > "$service_file"
-#!/bin/sh /etc/rc.common
-
-START=99
-USE_PROCD=1
-
-start_service() {
-    logger -t "chirpstack_mqtt_forwarder" "Starting ChirpStack MQTT forwarder with config: $config_file..."
-
-    procd_open_instance
-    procd_set_param command "$script_to_run" "$config_file"
-    procd_set_param respawn 3600 5 0  # Restart after 3600s if fails, up to 5 retries
-    procd_set_param stdout 1          # Redirect stdout to syslog
-    procd_set_param stderr 1          # Redirect stderr to syslog
-    procd_close_instance
-
-    logger -t "chirpstack_mqtt_forwarder" "Service started successfully!"
-}
-
-stop_service() {
-    logger -t "chirpstack_mqtt_forwarder" "Stopping ChirpStack MQTT forwarder service..."
-}
-EOF
-
-    chmod +x "$service_file"
-    echo "Service file created and made executable."
-
-    "$service_file" enable
-    echo "Service enabled to start on boot."
-
-    "$service_file" start
-    echo "Service started successfully."
-else
-    echo "Service already exists. Restarting service..."
-    "$service_file" restart
+# 【1】確認 binary 與 config 是否存在
+if [ ! -x "$bin_file" ]; then
+    echo "[❌] 執行檔不存在：$bin_file"
+    exit 1
 fi
 
-echo "Step 2: Service setup completed!"
+if [ ! -f "$config_file" ]; then
+    echo "[❌] 設定檔不存在：$config_file"
+    exit 1
+fi
+
+echo "【✔】Binary 與 Config 檢查通過"
+
+# 【2】複製 init.d 服務腳本
+echo "【→】複製 init.d 腳本到 $initd_target"
+cp "$initd_template" "$initd_target"
+chmod +x "$initd_target"
+
+# 【3】設定開機啟動與立即啟動
+echo "【→】啟用與啟動 MQTT forwarder 系統服務"
+$initd_target enable
+$initd_target start
+
+echo "✅ ChirpStack MQTT Forwarder 安裝完成。"

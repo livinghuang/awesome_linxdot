@@ -1,0 +1,30 @@
+#!/bin/sh /etc/rc.common
+
+# ─────────────────────────────────────────────
+# OpenWrt Init Script: ChirpStack MQTT Forwarder
+# 安裝路徑：/etc/init.d/linxdot_chirpstack_mqtt_forwarder
+# ─────────────────────────────────────────────
+
+START=99
+USE_PROCD=1
+
+# 可依據安裝時寫入的設定來讀取 toml
+BIN_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder/chirpstack_mqtt_forwarder_binary/chirpstack_mqtt_forwarder"
+CFG_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder/chirpstack_mqtt_forwarder_binary/chirpstack_mqtt_forwarder.toml"
+
+start_service() {
+    logger -t "chirpstack_mqtt_forwarder" "Starting ChirpStack MQTT forwarder..."
+    
+    procd_open_instance
+    procd_set_param command "$BIN_PATH" -c "$CFG_PATH"
+    procd_set_param respawn 3600 5 0      # 每 1 小時最多重啟 5 次
+    procd_set_param stdout 1              # 輸出導入 syslog
+    procd_set_param stderr 1
+    procd_close_instance
+
+    logger -t "chirpstack_mqtt_forwarder" "MQTT forwarder started using config: $CFG_PATH"
+}
+
+stop_service() {
+    logger -t "chirpstack_mqtt_forwarder" "Stopping ChirpStack MQTT forwarder..."
+}

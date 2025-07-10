@@ -91,11 +91,14 @@ echo "[INFO] [待開發] 安裝 ChirpStack Mesh Gateway..."
 # /opt/awesome_linxdot/awesome_software/chirpstack_mesh_gateway/install_chirpstack_mesh_gateway.sh
 
 # ───────────────────────────────────────────────
-# Step 6: 安裝 ChirpStack MQTT Forwarder（待建置）
+# Step 6: 安裝 ChirpStack MQTT Forwarder
 # ───────────────────────────────────────────────
 
-echo "[INFO] [待開發] 安裝 ChirpStack MQTT Forwarder..."
-# /opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder/install_chirpstack_mqtt_forwarder.sh
+echo "[INFO] 安裝 ChirpStack MQTT Forwarder..."
+/opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder/install_chirpstack_mqtt_forwarder.sh || {
+  echo "[ERROR] 安裝 ChirpStack MQTT Forwarder 失敗" >&2
+  exit 1
+}
 
 # ───────────────────────────────────────────────
 # 結尾說明
