@@ -11,7 +11,7 @@ log_to_syslog = true
 # ───── MQTT 連線設定 ─────
 [mqtt]
 # MQTT broker 位址，支援 tcp://, ssl://, ws:// 等格式
-server = "tcp://13.55.159.24:1883"
+server = "tcp://52.43.133.220:1883"
 
 # MQTT topic prefix
 # 實際 topics 將會是：
