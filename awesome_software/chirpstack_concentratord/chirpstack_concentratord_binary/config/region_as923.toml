@@ -4,10 +4,10 @@
 [gateway.beacon]
 
 # Compulsory RFU size.
-compulsory_rfu_size=2
+compulsory_rfu_size = 2
 
 # Beacon frequency / frequencies (Hz).
-frequencies=[
+frequencies = [
   923200000,
   923400000,
   923600000,
@@ -19,10 +19,17 @@ frequencies=[
 ]
 
 # Bandwidth (Hz).
-bandwidth=125000
+bandwidth = 125000
 
 # Spreading factor.
-spreading_factor=9
+spreading_factor = 9
 
 # TX power.
-tx_power=14
+tx_power = 22
+
+# ─────────────────────────────────────────────
+# 重要：設定 gateway uplink 不受 dwell time 限制
+# 避免僅限用部分頻率（如 923.2、923.4）
+# ─────────────────────────────────────────────
+[gateway]
+dwell_time_setting = "NoLimit"  # 可選：NoLimit / Limit400ms / Limit1s
