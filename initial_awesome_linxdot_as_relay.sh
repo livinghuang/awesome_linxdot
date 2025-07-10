@@ -1,16 +1,17 @@
 #!/bin/sh
 
 # ───────────────────────────────────────────────
-# Linxdot OpenSource - 初始化安裝腳本
-# 功能：安裝 Linxdot 所需各模組、清理舊服務、建立完整架構
+# Linxdot OpenSource - 初始化安裝腳本（Relay 版）
+# 功能：設定 Linxdot 為 Mesh Relay Gateway
 # Author: Living Huang
 # Updated: 2025-07-10
 # ───────────────────────────────────────────────
 
-set -e  # 有錯誤時中斷
-set -u  # 使用未定義變數時中斷
+set -e
+set -u
 
-echo "========== Linxdot 系統初始化開始 =========="
+echo "========== 🟡 Linxdot Relay Gateway 初始化開始 =========="
+
 # ───────────────────────────────────────────────
 # [Pre-Step] 移除 chirpstack-docker（如存在）
 # ───────────────────────────────────────────────
@@ -38,14 +39,14 @@ echo "[INFO] 設定 Cron 任務同步..."
   exit 1
 }
 
-echo "[INFO] 安裝 Reverse SSH 服務..."
+echo "[INFO] 安裝 Reverse SSH（供遠端管理維運）..."
 /opt/awesome_linxdot/awesome_software/reverse_ssh/install_reverse_ssh.sh || {
   echo "[ERROR] 安裝 Reverse SSH 失敗" >&2
   exit 1
 }
 
 # ───────────────────────────────────────────────
-# Step 1: 停用舊的 Linxdot 與 Watchcat 服務（若存在）
+# Step 1: 停用舊的 Linxdot 與 Watchcat 服務
 # ───────────────────────────────────────────────
 
 for svc in \
@@ -64,56 +65,32 @@ for svc in \
 done
 
 # ───────────────────────────────────────────────
-# Step 2: 安裝本地 ChirpStack Server
+# Step 2: 安裝 ChirpStack Concentratord
 # ───────────────────────────────────────────────
 
-echo "[INFO] 安裝本地 ChirpStack Server..."
-/opt/awesome_linxdot/awesome_software/chirpstack_server/install_chirpstack_server.sh || {
-  echo "[ERROR] 安裝本地 ChirpStack Server 失敗" >&2
-  exit 1
-}
-
-echo "[INFO] 安裝 ChirpStack Device Activator..."
-/opt/awesome_linxdot/awesome_software/chirpstack_device_activator/install_chirpstack_device_activator.sh || {
-  echo "[ERROR] 安裝 ChirpStack Device Activator 失敗" >&2
-  exit 1
-}
-
-# ───────────────────────────────────────────────
-# Step 3: 安裝 ChirpStack Concentratord
-# ───────────────────────────────────────────────
-
-echo "[INFO] 安裝 ChirpStack Concentratord..."
+echo "[INFO] 安裝 ChirpStack Concentratord（SX1302 gateway driver）..."
 /opt/awesome_linxdot/awesome_software/chirpstack_concentratord/install_chirpstack_concentratord.sh || {
   echo "[ERROR] 安裝 ChirpStack Concentratord 失敗" >&2
   exit 1
 }
 
 # ───────────────────────────────────────────────
-# Step 4: 安裝 ChirpStack UDP Forwarder
+# Step 3: 安裝 ChirpStack UDP Forwarder（選擇性）
 # ───────────────────────────────────────────────
 
-echo "[INFO] 安裝 ChirpStack UDP Forwarder..."
+echo "[INFO] 安裝 UDP Forwarder..."
 /opt/awesome_linxdot/awesome_software/chirpstack_udp_forwarder/install_chirpstack_udp_forwarder.sh || {
   echo "[ERROR] 安裝 ChirpStack UDP Forwarder 失敗" >&2
   exit 1
 }
 
-# Step 5: 安裝 ChirpStack Mesh Gateway（Border Beacon 版本）
-echo "[INFO] 安裝 ChirpStack Mesh Gateway (Border Beacon)..."
-/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/install_chirpstack_gateway_mesh_border_beacon.sh || {
-  echo "[ERROR] 安裝 ChirpStack Mesh Gateway Border Beacon 失敗" >&2
-  exit 1
-}
-
-
 # ───────────────────────────────────────────────
-# Step 6: 安裝 ChirpStack MQTT Forwarder
+# Step 4: 安裝 ChirpStack Mesh Gateway（Relay 模式）
 # ───────────────────────────────────────────────
 
-echo "[INFO] 安裝 ChirpStack MQTT Forwarder..."
-/opt/awesome_linxdot/awesome_software/chirpstack_mqtt_forwarder/install_chirpstack_mqtt_forwarder.sh || {
-  echo "[ERROR] 安裝 ChirpStack MQTT Forwarder 失敗" >&2
+echo "[INFO] 安裝 ChirpStack Mesh Gateway（Relay 模式）..."
+/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/install_chirpstack_gateway_mesh_relay.sh || {
+  echo "[ERROR] 安裝 Mesh Gateway Relay 失敗" >&2
   exit 1
 }
 
@@ -121,8 +98,9 @@ echo "[INFO] 安裝 ChirpStack MQTT Forwarder..."
 # 結尾說明
 # ───────────────────────────────────────────────
 
-echo "✅ Linxdot LoRaWAN 架構初始化完成！"
+echo "✅ Linxdot Relay Gateway 初始化完成！"
 
-# 架構備註：
-#   SX1302 → concentratord → UDP forwarder → Local ChirpStack Server
-#                          → Mesh Gateway → MQTT forwarder → Cloud Server
+# 架構摘要：
+#   SX1302 → Concentratord
+#          → Mesh Relay Gateway（轉送 Border 資料）
+#          → UDP Forwarder（給 Local Server）
