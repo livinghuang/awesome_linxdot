@@ -39,14 +39,35 @@ if ! echo | nc localhost 22 >/dev/null 2>&1; then
 fi
 
 # === 註冊請求 ===
+# === 取得 Gateway ID (若存在) ===
+if [ -f "/tmp/gateway_id" ]; then
+  GATEWAY_ID=$(grep -Eo '^[a-fA-F0-9]{16}$' /tmp/gateway_id)
+else
+  GATEWAY_ID=""
+fi
+
+# === 建立 payload ===
 echo "[$(date)] 📡 傳送註冊請求至 $API_URL" >> "$LOG_FILE"
-cat <<EOF > "$TMP_PAYLOAD"
+
+if [ -n "$GATEWAY_ID" ]; then
+  cat <<EOF > "$TMP_PAYLOAD"
+{
+  "device_name": "$DEVICE_NAME",
+  "public_key": "$(cat $KEY_PATH.pub)",
+  "firmware_version": "v1.0",
+  "gateway_id": "$GATEWAY_ID"
+}
+EOF
+else
+  cat <<EOF > "$TMP_PAYLOAD"
 {
   "device_name": "$DEVICE_NAME",
   "public_key": "$(cat $KEY_PATH.pub)",
   "firmware_version": "v1.0"
 }
 EOF
+fi
+
 
 RESPONSE=$(wget -qO- --post-file="$TMP_PAYLOAD" "$API_URL")
 rm -f "$TMP_PAYLOAD"
@@ -106,4 +127,6 @@ chmod +x "$LOOP_SCRIPT"
 
 # === 背景啟動 loop 腳本 ===
 "$LOOP_SCRIPT" &
-echo "[$(date)] ✅ Reverse SSH 背景已啟動 (PID \$!)" >> "$LOG_FILE"
+LOOP_PID=$!
+echo "[$(date)] ✅ Reverse SSH 背景已啟動 (PID $LOOP_PID)" >> "$LOG_FILE"
+
