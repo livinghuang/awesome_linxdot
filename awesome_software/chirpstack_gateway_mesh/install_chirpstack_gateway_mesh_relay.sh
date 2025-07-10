@@ -24,7 +24,7 @@ fi
 
 # 主要程式與設定檔路徑
 SCRIPT_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh"
-BINARY_PATH="$SCRIPT_PATH/chirpstack_gateway_mesh_binary/chirpstack_gateway_mesh_relay"
+BINARY_PATH="$SCRIPT_PATH/chirpstack_gateway_mesh_binary/chirpstack_gateway_mesh"
 INITD_TEMPLATE="$SCRIPT_PATH/chirpstack_gateway_mesh_relay.initd"
 CONFIG_PATH="$SCRIPT_PATH/chirpstack_gateway_mesh_binary/config/chirpstack_gateway_mesh_as_relay.toml"
 
