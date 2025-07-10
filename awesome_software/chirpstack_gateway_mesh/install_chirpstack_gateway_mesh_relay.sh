@@ -1,39 +1,48 @@
 #!/bin/sh
 
 # ───────────────────────────────────────────────
-# 安裝 ChirpStack Mesh Gateway - Border Beacon 版本
+# Linxdot OpenSource - 安裝腳本（Mesh Relay 服務）
+# 功能：安裝 ChirpStack Mesh Gateway（Relay）至 OpenWrt 系統服務
 # Author: Living Huang
-# Date: 2025-07-10
+# Updated: 2025-07-10
 # ───────────────────────────────────────────────
 
-binary="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary/chirpstack_gateway_mesh_border_beacon"
-config="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary/config/chirpstack_gateway_mesh_as_border.toml"
-initd_file="/etc/init.d/linxdot_chirpstack_gateway_mesh_border_beacon"
+echo "【Linxdot Mesh Relay 安裝開始】"
 
-echo "[INFO] 安裝 ChirpStack Mesh Border Beacon Service..."
+SERVICE_NAME="linxdot_chirpstack_gateway_mesh_relay"
+INITD_PATH="/etc/init.d/$SERVICE_NAME"
 
-cat << EOF > "$initd_file"
-#!/bin/sh /etc/rc.common
+# 主要程式與設定檔路徑
+BINARY_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary/chirpstack_gateway_mesh_relay"
+CONFIG_PATH="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary/config/chirpstack_gateway_mesh_as_relay.toml"
+INITD_TEMPLATE="/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/chirpstack_gateway_mesh_binary/chirpstack_gateway_mesh_relay.initd"
 
-START=99
-USE_PROCD=1
+# 【1】檢查檔案是否存在
+if [ ! -x "$BINARY_PATH" ]; then
+    echo "[❌] 找不到可執行檔：$BINARY_PATH"
+    exit 1
+fi
 
-start_service() {
-  logger -t "mesh_border_beacon" "啟動 ChirpStack Mesh Border Beacon"
-  procd_open_instance
-  procd_set_param command "$binary" -c "$config"
-  procd_set_param respawn 3600 5 0
-  procd_set_param stdout 1
-  procd_set_param stderr 1
-  procd_close_instance
-}
+if [ ! -f "$CONFIG_PATH" ]; then
+    echo "[❌] 找不到設定檔：$CONFIG_PATH"
+    exit 1
+fi
 
-stop_service() {
-  logger -t "mesh_border_beacon" "停止 ChirpStack Mesh Border Beacon"
-}
-EOF
+if [ ! -f "$INITD_TEMPLATE" ]; then
+    echo "[❌] 找不到 init.d 腳本：$INITD_TEMPLATE"
+    exit 1
+fi
 
-chmod +x "$initd_file"
-"$initd_file" enable
-"$initd_file" start
-echo "[INFO] 安裝完成並已啟動！"
+echo "【✔】Binary、Config、Init Script 檢查通過"
+
+# 【2】複製 init.d 腳本到系統
+echo "【→】複製 init.d 腳本到 $INITD_PATH"
+cp "$INITD_TEMPLATE" "$INITD_PATH"
+chmod +x "$INITD_PATH"
+
+# 【3】啟用與啟動服務
+echo "【→】啟用並啟動 Mesh Relay 系統服務"
+$INITD_PATH enable
+$INITD_PATH start
+
+echo "✅ ChirpStack Mesh Gateway（Relay 模式）安裝完成。"
