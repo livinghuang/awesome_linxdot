@@ -2,6 +2,30 @@
 
   <h2>LoRaWAN Gateway 狀態</h2>
 
-  <p>Hello World</p>
+  <!-- Concentratord 狀態 -->
+  <b>Service 狀態:</b>
+  <pre><%= luci.util.exec("/etc/init.d/linxdot_chirpstack_concentratord status") %></pre>
+
+  <!-- 顯示 Gateway ID -->
+  <b>目前 Gateway ID:</b>
+  <pre>
+<%
+  local gwid = require("luci.controller.chirpstack").get_gateway_id()
+  if gwid then
+      write(gwid)
+  else
+      write("尚未擷取到 Gateway ID")
+  end
+%>
+</pre>
+
+  <hr />
+
+  <button class="cbi-button cbi-input-reload"
+          type="button"
+          onclick="location.href='<%=luci.dispatcher.build_url('admin', 'chirpstack')%>'">
+    重新擷取 Gateway ID
+  </button>
+
 
   <%+footer%>
