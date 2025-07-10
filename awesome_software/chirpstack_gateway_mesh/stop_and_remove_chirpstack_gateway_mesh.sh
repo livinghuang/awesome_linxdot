@@ -1,74 +1,24 @@
 #!/bin/sh
 
-# Linxdot OpenSource:
-# Purpose: Uninstall the chirpstack_gateway_mesh service, kill related processes, and clean up.
+# Linxdot OpenSource
+# 移除所有 ChirpStack Gateway Mesh 服務（border / relay / beacon）
 # Author: Living Huang
-# Date: 2025-07-08
-# Updated: Unified into a single service removal with complete process and file cleanup.
+# Date: 2025-07-10
 
+SERVICES="linxdot_chirpstack_gateway_mesh_border linxdot_chirpstack_gateway_mesh_relay"
 
-process_name="chirpstack_gateway_mesh"
-service_name="linxdot_chirpstack_gateway_mesh"
-service_file="/etc/init.d/${service_name}"
-pid_file="/var/run/${process_name}.pid"
-lock_file="/tmp/${process_name}.lock"
+echo "[INFO] 停用並移除 Gateway Mesh 相關服務..."
 
-echo "Step 1: Stopping and disabling service..."
+for svc in $SERVICES; do
+  if [ -f "/etc/init.d/$svc" ]; then
+    echo "[INFO] 停用服務 $svc"
+    /etc/init.d/$svc stop
+    /etc/init.d/$svc disable
+    rm -f /etc/init.d/$svc
+    echo "[OK] 已移除服務 $svc"
+  else
+    echo "[WARN] 服務 $svc 不存在，略過..."
+  fi
+done
 
-if [ -f "$service_file" ]; then
-    echo "Stopping service: $service_name..."
-    "$service_file" stop || true
-    sleep 2
-
-    echo "Disabling service: $service_name..."
-    "$service_file" disable || true
-
-    echo "Removing service file: $service_file..."
-    rm -f "$service_file"
-else
-    echo "No service file found for $service_name. Skipping."
-fi
-
-echo "Step 2: Killing all running processes related to $process_name..."
-
-pids=$(pgrep -f "$process_name")
-if [ -n "$pids" ]; then
-    echo "Found running processes: $pids. Attempting to kill..."
-    for pid in $pids; do
-        kill "$pid" && echo "Killed PID $pid" || echo "Failed to kill PID $pid"
-    done
-
-    sleep 2
-
-    # Force kill if any process remains
-    remaining_pids=$(pgrep -f "$process_name")
-    if [ -n "$remaining_pids" ]; then
-        echo "Force killing remaining processes: $remaining_pids..."
-        for pid in $remaining_pids; do
-            kill -9 "$pid" && echo "Force killed PID $pid" || echo "Failed to force kill PID $pid"
-        done
-    else
-        echo "No remaining processes found."
-    fi
-else
-    echo "No running processes found."
-fi
-
-echo "Step 3: Cleaning up temporary files..."
-
-if [ -f "$pid_file" ]; then
-    rm -f "$pid_file"
-    echo "PID file removed."
-fi
-
-if [ -f "$lock_file" ]; then
-    rm -f "$lock_file"
-    echo "Lock file removed."
-fi
-
-echo "Step 4: Removing cron job for mesh relay time sync..."
-sed -i '/run_mesh_time_sync.sh/d' /etc/crontabs/root
-/etc/init.d/cron restart
-logger -t "chirpstack_gateway_mesh" "Cron job for mesh relay time sync removed."
-
-echo "Step 5: Uninstallation completed. All related services and processes have been removed."
+echo "[DONE] 所有 Gateway Mesh 服務已停用並清除"

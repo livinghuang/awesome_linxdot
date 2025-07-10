@@ -83,12 +83,13 @@ echo "[INFO] 安裝 ChirpStack UDP Forwarder..."
   exit 1
 }
 
-# ───────────────────────────────────────────────
-# Step 5: 安裝 ChirpStack Mesh Gateway（待建置）
-# ───────────────────────────────────────────────
+# Step 5: 安裝 ChirpStack Mesh Gateway（Border Beacon 版本）
+echo "[INFO] 安裝 ChirpStack Mesh Gateway (Border Beacon)..."
+/opt/awesome_linxdot/awesome_software/chirpstack_gateway_mesh/install_chirpstack_gateway_mesh_border_beacon.sh || {
+  echo "[ERROR] 安裝 ChirpStack Mesh Gateway Border Beacon 失敗" >&2
+  exit 1
+}
 
-echo "[INFO] [待開發] 安裝 ChirpStack Mesh Gateway..."
-# /opt/awesome_linxdot/awesome_software/chirpstack_mesh_gateway/install_chirpstack_mesh_gateway.sh
 
 # ───────────────────────────────────────────────
 # Step 6: 安裝 ChirpStack MQTT Forwarder
