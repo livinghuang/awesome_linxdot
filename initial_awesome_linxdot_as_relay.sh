@@ -11,6 +11,22 @@ set -e  # 有錯誤時中斷
 set -u  # 使用未定義變數時中斷
 
 echo "========== Linxdot 系統初始化開始 =========="
+# ───────────────────────────────────────────────
+# [Pre-Step] 移除 chirpstack-docker（如存在）
+# ───────────────────────────────────────────────
+
+docker_chirpstack_dir="/mnt/opensource-system/chirpstack-docker"
+
+if [ -d "$docker_chirpstack_dir" ]; then
+  echo "[INFO] 偵測到舊版 chirpstack-docker，進行移除..."
+
+  if command -v docker >/dev/null 2>&1; then
+    docker compose -f "$docker_chirpstack_dir/docker-compose.yml" down || true
+  fi
+
+  rm -rf "$docker_chirpstack_dir"
+  echo "[OK] 舊版 chirpstack-docker 清除完成"
+fi
 
 # ───────────────────────────────────────────────
 # Step 0: 安裝 Cron 與 Reverse SSH
