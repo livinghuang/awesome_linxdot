@@ -1,8 +1,3 @@
-# [gateway]
-
-# Uplink dwell time setting (important for AS923 region)
-# dwell_time_setting = "NoLimit"
-
 [gateway.beacon]
 # Compulsory RFU size.
 compulsory_rfu_size = 2
@@ -26,4 +21,4 @@ bandwidth = 125000
 spreading_factor = 9
 
 # TX power.
-tx_power = 14
+tx_power = 22
