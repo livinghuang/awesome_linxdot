@@ -59,21 +59,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  chirpstack-gateway-mesh:
-    image: chirpstack/chirpstack-gateway-mesh:4
-    restart: unless-stopped
-    command: -c /etc/chirpstack-gateway-mesh
-    volumes:
-      - ./configuration/chirpstack-gateway-mesh:/etc/chirpstack-gateway-mesh
-    depends_on:
-      - mosquitto
-      - chirpstack
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   chirpstack-rest-api:
     image: chirpstack/chirpstack-rest-api:4
     restart: unless-stopped

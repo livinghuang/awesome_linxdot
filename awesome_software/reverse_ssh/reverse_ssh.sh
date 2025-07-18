@@ -42,6 +42,7 @@ fi
 # === 取得 Gateway ID (若存在) ===
 if [ -f "/tmp/gateway_id" ]; then
   GATEWAY_ID=$(grep -Eo '^[a-fA-F0-9]{16}$' /tmp/gateway_id)
+  echo "[$(date)] 📦 讀取 Gateway ID：$GATEWAY_ID" >> "$LOG_FILE"
 else
   GATEWAY_ID=""
 fi

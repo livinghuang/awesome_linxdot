@@ -72,7 +72,7 @@
   # TX Power (EIRP).
     #
     # The TX Power in EIRP used when relaying uplink and downlink messages.
-    tx_power=16
+    tx_power=22
 
   # Data-rate properties.
     #
