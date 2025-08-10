@@ -96,10 +96,12 @@ tar -czf "${ARCHIVE}" -C "${WORK_DIR}" . 2>&1
 # 壓縮完成後刪除工作目錄
 rm -rf "${WORK_DIR}"
 
-#--- 清理過期備份 ---
+#--- 清理過期備份（BusyBox 相容做法）---
 log_info "清理超過 ${RETENTION_DAYS} 天的備份 ..."
-find "${BACKUP_ROOT}" -type f -name "logs_*.tar.gz" -mtime +"${RETENTION_DAYS}" -print -delete | while read -r f; do
-  log_info "  已刪除 ${f}"
+find "${BACKUP_ROOT}" -type f -name "logs_*.tar.gz" -mtime +"${RETENTION_DAYS}" -print \
+| while read -r f; do
+  # 逐一刪除並記錄
+  rm -f "$f" && log_info "  已刪除 ${f}"
 done
 
 log_info "備份完成：${ARCHIVE}"
