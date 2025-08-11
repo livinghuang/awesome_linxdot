@@ -6,7 +6,6 @@
 #
 # 說明：
 # - 本排程檔為 Linxdot 自動化作業的標準排程表
-# - 透過 cron_sync.sh 自動套用至 /etc/crontabs/root
 # - 若要修改排程，請於 GitHub 編輯本檔案並推送
 # - 無需手動備份，版本已由 Git 控管
 # ============================================
@@ -24,10 +23,3 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 # === 健康檢查排程 ===
 0   2 * * * /opt/awesome_linxdot/awesome_software/health_check/system_health_check.sh >> /var/log/health_check.log 2>&1
-*/10 * * * * /opt/awesome_linxdot/awesome_software/watchdog/system_watchdog.sh >> /var/log/system_watchdog.log 2>&1
-
-# # === GitHub 同步更新機制（每日 00:20 執行一次）===
-# 20  0 * * * /opt/awesome_linxdot/awesome_software/github_sync/github_sync.sh >> /var/log/github_sync.log 2>&1
-
-# === Cron 任務表同步（每日 00:30 執行一次）===
-30  0 * * * /opt/awesome_linxdot/awesome_software/cron/cron_sync.sh >> /var/log/cron_sync.log 2>&1
