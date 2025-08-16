@@ -1,29 +1,29 @@
 #!/bin/sh
 ###############################################################################
 # Linxdot Backup Run Script
-# 功能：
-#   - 統一呼叫所有子備份腳本（依建議順序）
-#   - 支援 --test 模式，只執行 backup_test.sh
-#   - 將輸出集中到 summary log
-#   - 鎖機制避免重複執行
+# - Orchestrates all sub-scripts in a safe order
+# - Supports --test (runs backup_test.sh only)
+# - Writes a summary log and prevents concurrent runs (PID lock)
 ###############################################################################
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-SCRIPT_DIR="/opt/awesome_linxdot/awesome_software/backup"
+
+# Resolve script directory (absolute), BusyBox friendly
+SCRIPT_DIR="$(dirname "$0")"
+case "$SCRIPT_DIR" in
+  /*) : ;;
+  *) SCRIPT_DIR="$(pwd)/$SCRIPT_DIR" ;;
+esac
+
 SUMMARY_LOG="/var/log/backup_summary.log"
 LOCKFILE="/tmp/backup_run.lock"
-DATE="$(date '+%F %T')"
 
-log() {
-  echo "[$(date '+%F %T')] $*" >> "$SUMMARY_LOG"
-}
+log() { echo "[$(date '+%F %T')] $*" >> "$SUMMARY_LOG"; }
 
-# --- 測試模式 ---
-if [ "$1" = "--test" ]; then
-  {
-    echo "======================"
-    log "Backup run started (TEST MODE)"
-  } >> "$SUMMARY_LOG"
+# --test mode ---------------------------------------------------------------
+if [ "${1:-}" = "--test" ]; then
+  echo "======================" >> "$SUMMARY_LOG"
+  log "Backup run started (TEST MODE)"
 
   TEST_SCRIPT="${SCRIPT_DIR}/backup_test.sh"
   if [ -x "$TEST_SCRIPT" ]; then
@@ -43,7 +43,7 @@ if [ "$1" = "--test" ]; then
   exit 0
 fi
 
-# --- 鎖機制 ---
+# Locking (PID-based) -------------------------------------------------------
 if [ -e "$LOCKFILE" ]; then
   if kill -0 "$(cat "$LOCKFILE" 2>/dev/null)" 2>/dev/null; then
     log "WARN: another backup_run is already running (PID $(cat "$LOCKFILE"))"
@@ -53,16 +53,13 @@ if [ -e "$LOCKFILE" ]; then
     rm -f "$LOCKFILE"
   fi
 fi
-
 echo $$ > "$LOCKFILE"
 trap 'rm -f "$LOCKFILE"' EXIT INT TERM
 
-{
-  echo "======================"
-  log "Backup run started"
-} >> "$SUMMARY_LOG"
+echo "======================" >> "$SUMMARY_LOG"
+log "Backup run started"
 
-# --- 建議執行順序 ---
+# Order matters: free space first, then heavy tasks, then packing and sweeping.
 TASKS="
 backup_syslog.sh
 backup_docker.sh
@@ -72,7 +69,6 @@ backup_pack.sh
 backup_clean_old_record.sh
 "
 
-# --- 執行 ---
 for task in $TASKS; do
   SCRIPT_PATH="${SCRIPT_DIR}/${task}"
   if [ -x "$SCRIPT_PATH" ]; then
