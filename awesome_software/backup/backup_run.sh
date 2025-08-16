@@ -9,44 +9,58 @@
 ###############################################################################
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
-SCRIPT_DIR="/root/backup"
+SCRIPT_DIR="/opt/awesome_linxdot/awesome_software/backup"
 SUMMARY_LOG="/var/log/backup_summary.log"
 LOCKFILE="/tmp/backup_run.lock"
-
 DATE="$(date '+%F %T')"
+
+log() {
+  echo "[$(date '+%F %T')] $*" >> "$SUMMARY_LOG"
+}
 
 # --- 測試模式 ---
 if [ "$1" = "--test" ]; then
-  echo "======================" >> "$SUMMARY_LOG"
-  echo "[$DATE] Backup run started (TEST MODE)" >> "$SUMMARY_LOG"
+  {
+    echo "======================"
+    log "Backup run started (TEST MODE)"
+  } >> "$SUMMARY_LOG"
 
   TEST_SCRIPT="${SCRIPT_DIR}/backup_test.sh"
   if [ -x "$TEST_SCRIPT" ]; then
-    echo "[$DATE] Running backup_test.sh ..." >> "$SUMMARY_LOG"
+    log "Running backup_test.sh ..."
     if "$TEST_SCRIPT" >> "$SUMMARY_LOG" 2>&1; then
-      echo "[$DATE] ✅ backup_test.sh finished OK" >> "$SUMMARY_LOG"
+      log "✅ backup_test.sh finished OK"
     else
-      echo "[$DATE] ❌ backup_test.sh failed (exit $?)" >> "$SUMMARY_LOG"
+      rc=$?
+      log "❌ backup_test.sh failed (exit $rc)"
     fi
   else
-    echo "[$DATE] ⚠️  backup_test.sh not found or not executable" >> "$SUMMARY_LOG"
+    log "⚠️  backup_test.sh not found or not executable"
   fi
 
-  echo "[$DATE] Backup run completed (TEST MODE)" >> "$SUMMARY_LOG"
+  log "Backup run completed (TEST MODE)"
   echo "======================" >> "$SUMMARY_LOG"
   exit 0
 fi
 
 # --- 鎖機制 ---
 if [ -e "$LOCKFILE" ]; then
-  echo "[$DATE] WARN: another backup_run is already running" >> "$SUMMARY_LOG"
-  exit 0
+  if kill -0 "$(cat "$LOCKFILE" 2>/dev/null)" 2>/dev/null; then
+    log "WARN: another backup_run is already running (PID $(cat "$LOCKFILE"))"
+    exit 0
+  else
+    log "Stale lock detected, removing"
+    rm -f "$LOCKFILE"
+  fi
 fi
-touch "$LOCKFILE"
+
+echo $$ > "$LOCKFILE"
 trap 'rm -f "$LOCKFILE"' EXIT INT TERM
 
-echo "======================" >> "$SUMMARY_LOG"
-echo "[$DATE] Backup run started" >> "$SUMMARY_LOG"
+{
+  echo "======================"
+  log "Backup run started"
+} >> "$SUMMARY_LOG"
 
 # --- 建議執行順序 ---
 TASKS="
@@ -62,16 +76,17 @@ backup_clean_old_record.sh
 for task in $TASKS; do
   SCRIPT_PATH="${SCRIPT_DIR}/${task}"
   if [ -x "$SCRIPT_PATH" ]; then
-    echo "[$DATE] Running $task ..." >> "$SUMMARY_LOG"
+    log "Running $task ..."
     if "$SCRIPT_PATH" >> "$SUMMARY_LOG" 2>&1; then
-      echo "[$DATE] ✅ $task finished OK" >> "$SUMMARY_LOG"
+      log "✅ $task finished OK"
     else
-      echo "[$DATE] ❌ $task failed (exit $?)" >> "$SUMMARY_LOG"
+      rc=$?
+      log "❌ $task failed (exit $rc)"
     fi
   else
-    echo "[$DATE] ⚠️  $task not found or not executable" >> "$SUMMARY_LOG"
+    log "⚠️  $task not found or not executable"
   fi
 done
 
-echo "[$DATE] Backup run completed" >> "$SUMMARY_LOG"
+log "Backup run completed"
 echo "======================" >> "$SUMMARY_LOG"

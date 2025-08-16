@@ -18,15 +18,29 @@ OVERLAY_DIR=$(mount | awk '$3=="/overlay"{print $3}')
 USED=$(df "$OVERLAY_DIR" | awk 'NR==2{gsub("%","");print $(NF-1)}')
 FREE=$((100 - USED))
 
-# 若剩餘空間少於 5%，記錄警告並刪除最舊的 log 備份
-[ "$FREE" -lt 5 ] && logger -t log_backup "[WARN] Low disk space ($FREE%)" && \
-    ls -1t "$BACKUP_DIR"/messages_*.log 2>/dev/null | tail -n 1 | xargs -r rm -f
+# 若剩餘空間少於 5%，刪除最舊備份
+if [ "$FREE" -lt 5 ]; then
+    logger -t log_backup "[WARN] Low disk space ($FREE%), deleting oldest log"
+    ls -1tr "$BACKUP_DIR"/messages_*.log 2>/dev/null | head -n 1 | xargs -r rm -f
+fi
 
-# 建立備份資料夾（如未存在）
+# 建立備份資料夾
 mkdir -p "$BACKUP_DIR"
 
-# 若 messages 存在，則備份後清空它
-[ -f "$LOG_FILE" ] && cp "$LOG_FILE" "$BACKUP_DIR/messages_$DATE.log" && : > "$LOG_FILE"
+# 備份並確認成功後再清空
+if [ -f "$LOG_FILE" ]; then
+    DEST="$BACKUP_DIR/messages_$DATE.log"
+    if cp "$LOG_FILE" "$DEST"; then
+        logger -t log_backup "[INFO] messages backed up to $DEST"
+        : > "$LOG_FILE"
+    else
+        logger -t log_backup "[ERROR] Failed to backup $LOG_FILE"
+    fi
+fi
 
-# 重新啟動 log 服務
-/etc/init.d/log restart
+# 重啟 log 服務（根據系統不同可能是 log 或 logd）
+if /etc/init.d/logd status >/dev/null 2>&1; then
+    /etc/init.d/logd restart
+else
+    /etc/init.d/log restart
+fi

@@ -11,11 +11,12 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 KEEP_DAYS=7
 LOGFILE="/var/log/backup_cleanup.log"
 
-# 開始清理
-find /root -name "backup_*.tar.gz" -type f -mtime +"$KEEP_DAYS" -exec rm -f {} \;
-find /root/backup -name "messages_*.log" -type f -mtime +"$KEEP_DAYS" -exec rm -f {} \;
-find /root/backup -name "etc_*" -type d -mtime +"$KEEP_DAYS" -exec rm -rf {} \;
-find /root/docker_log_backup -name "docker_logs_*.tar.gz" -type f -mtime +"$KEEP_DAYS" -exec rm -f {} \;
+echo "[$(date '+%F %T')] Start cleanup" >> "$LOGFILE"
 
-# 紀錄清理完成時間
-echo "$(date '+%F %T') Cleanup completed" >> "$LOGFILE"
+# 清理舊檔案（並記錄被刪掉的檔名）
+find /root -name "backup_*.tar.gz" -type f -mtime +"$KEEP_DAYS" -print -delete >> "$LOGFILE"
+find /root/backup -name "messages_*.log" -type f -mtime +"$KEEP_DAYS" -print -delete >> "$LOGFILE"
+find /root/backup -name "etc_*" -type d -mtime +"$KEEP_DAYS" -print -exec rm -rf {} \; >> "$LOGFILE"
+find /root/docker_log_backup -name "docker_logs_*.tar.gz" -type f -mtime +"$KEEP_DAYS" -print -delete >> "$LOGFILE"
+
+echo "[$(date '+%F %T')] Cleanup completed" >> "$LOGFILE"
